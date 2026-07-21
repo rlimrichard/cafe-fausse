@@ -58,7 +58,7 @@ export default function Footer() {
           {status === 'success' && <p className="form-success">Thanks for subscribing!</p>}
           {status === 'already-subscribed' && <p className="form-success">This email is already subscribed to the newsletter.</p>}
           {status === 'error' && <p className="form-error">Something went wrong. Please try again.</p>}
-          {status && status !== 'success' && status !== 'error' && status !== 'loading' && (
+          {status && status !== 'success' && status !== 'already-subscribed' && status !== 'error' && status !== 'loading' && (
             <p className="form-error">{status}</p>
           )}
         </div>
