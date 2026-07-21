@@ -14,6 +14,8 @@ export default function Admin() {
   const [loading, setLoading] = useState(false)
   const [actionLoading, setActionLoading] = useState(null)
   const [toast, setToast] = useState(null)
+  const [selected, setSelected] = useState(new Set())
+  const [bulkLoading, setBulkLoading] = useState(false)
 
   const [logs, setLogs] = useState([])
   const [logsOpen, setLogsOpen] = useState(false)
@@ -34,6 +36,7 @@ export default function Admin() {
 
   const fetchReservations = useCallback(async (pwd, f) => {
     setLoading(true)
+    setSelected(new Set())
     try {
       const qs = f !== 'all' ? `?status=${f}` : ''
       const res = await fetch(`/api/admin/reservations${qs}`, {
@@ -102,6 +105,47 @@ export default function Admin() {
   useEffect(() => {
     if (!logsPaused) logEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [logs, logsPaused])
+
+  function toggleSelect(id) {
+    setSelected(prev => {
+      const next = new Set(prev)
+      next.has(id) ? next.delete(id) : next.add(id)
+      return next
+    })
+  }
+
+  function toggleSelectAll(ids) {
+    setSelected(prev => prev.size === ids.length ? new Set() : new Set(ids))
+  }
+
+  async function handleBulkAction(action) {
+    const ids = [...selected]
+    if (action === 'delete' && !window.confirm(`Delete ${ids.length} reservation(s) permanently?`)) return
+    setBulkLoading(true)
+    try {
+      const res = await fetch('/api/admin/reservations/bulk', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-Admin-Password': password },
+        body: JSON.stringify({ action, ids }),
+      })
+      const data = await res.json()
+      if (res.ok) {
+        showToast(data.message)
+        if (action === 'delete') {
+          setReservations(prev => prev.filter(r => !selected.has(r.id)))
+        } else {
+          setReservations(prev => prev.map(r => selected.has(r.id) ? { ...r, status: action } : r))
+        }
+        setSelected(new Set())
+      } else {
+        showToast(data.error || 'Bulk action failed.', 'error')
+      }
+    } catch {
+      showToast('Network error.', 'error')
+    } finally {
+      setBulkLoading(false)
+    }
+  }
 
   async function handleLogin(e) {
     e.preventDefault()
@@ -247,9 +291,37 @@ export default function Admin() {
         <div className="admin-empty">No {filter === 'all' ? '' : filter} reservations.</div>
       ) : (
         <div className="admin-table-wrap">
+          {selected.size > 0 && (
+            <div className="bulk-toolbar">
+              <span className="bulk-count">{selected.size} selected</span>
+              <button className="action-btn accept-btn" onClick={() => handleBulkAction('accepted')} disabled={bulkLoading}>
+                Accept all
+              </button>
+              <button className="action-btn deny-btn" onClick={() => handleBulkAction('denied')} disabled={bulkLoading}>
+                Deny all
+              </button>
+              <button className="action-btn pending-btn" onClick={() => handleBulkAction('pending')} disabled={bulkLoading}>
+                Mark pending
+              </button>
+              <button className="action-btn delete-btn" onClick={() => handleBulkAction('delete')} disabled={bulkLoading}>
+                Delete all
+              </button>
+              <button className="bulk-clear" onClick={() => setSelected(new Set())}>
+                Clear selection
+              </button>
+            </div>
+          )}
           <table className="admin-table">
             <thead>
               <tr>
+                <th className="col-check">
+                  <input
+                    type="checkbox"
+                    checked={visible.length > 0 && selected.size === visible.length}
+                    ref={el => el && (el.indeterminate = selected.size > 0 && selected.size < visible.length)}
+                    onChange={() => toggleSelectAll(visible.map(r => r.id))}
+                  />
+                </th>
                 <th>#</th>
                 <th>Guest</th>
                 <th>Date & Time</th>
@@ -262,7 +334,14 @@ export default function Admin() {
             </thead>
             <tbody>
               {visible.map(r => (
-                <tr key={r.id} className={`row-${r.status}`}>
+                <tr key={r.id} className={`row-${r.status}${selected.has(r.id) ? ' row-selected' : ''}`}>
+                  <td className="col-check">
+                    <input
+                      type="checkbox"
+                      checked={selected.has(r.id)}
+                      onChange={() => toggleSelect(r.id)}
+                    />
+                  </td>
                   <td className="res-id">{r.id}</td>
                   <td className="res-guest">
                     <span className="guest-name">{r.name}</span>
@@ -295,6 +374,15 @@ export default function Admin() {
                         disabled={actionLoading === r.id + 'denied'}
                       >
                         Deny
+                      </button>
+                    )}
+                    {r.status !== 'pending' && (
+                      <button
+                        className="action-btn pending-btn"
+                        onClick={() => updateStatus(r.id, 'pending')}
+                        disabled={actionLoading === r.id + 'pending'}
+                      >
+                        Pending
                       </button>
                     )}
                     <button

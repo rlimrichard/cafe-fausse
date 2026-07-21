@@ -321,8 +321,8 @@ def admin_update_reservation(res_id):
     data = request.get_json(silent=True) or {}
     new_status = data.get('status')
 
-    if new_status not in ('accepted', 'denied'):
-        return jsonify(error="status must be 'accepted' or 'denied'."), 400
+    if new_status not in ('accepted', 'denied', 'pending'):
+        return jsonify(error="status must be 'accepted', 'denied', or 'pending'."), 400
 
     try:
         with get_conn() as conn:
@@ -342,8 +342,8 @@ def admin_update_reservation(res_id):
             ).fetchone()
             conn.commit()
 
-        # Send notification email (non-blocking — failure doesn't affect the API response)
-        if customer:
+        # Send notification emails only for accept/deny, not when reverting to pending
+        if customer and new_status != 'pending':
             if new_status == 'accepted':
                 email_accepted(
                     name=customer['customer_name'],
@@ -387,6 +387,76 @@ def admin_delete_reservation(res_id):
     except Exception as e:
         app.logger.error(f'Admin delete error: {e}')
         return jsonify(error='Failed to delete reservation.'), 500
+
+
+@app.post('/api/admin/reservations/bulk')
+def admin_bulk_reservations():
+    denied = check_admin(request)
+    if denied:
+        return denied
+
+    data = request.get_json(silent=True) or {}
+    action = data.get('action')
+    ids = data.get('ids')
+
+    if not isinstance(ids, list) or not ids:
+        return jsonify(error='ids must be a non-empty list.'), 400
+    if action not in ('accepted', 'denied', 'pending', 'delete'):
+        return jsonify(error="action must be 'accepted', 'denied', 'pending', or 'delete'."), 400
+
+    # Ensure all ids are integers
+    try:
+        ids = [int(i) for i in ids]
+    except (TypeError, ValueError):
+        return jsonify(error='All ids must be integers.'), 400
+
+    try:
+        with get_conn() as conn:
+            if action == 'delete':
+                rows = conn.execute(
+                    'DELETE FROM reservations WHERE id = ANY(%s) RETURNING id',
+                    (ids,)
+                ).fetchall()
+            else:
+                rows = conn.execute(
+                    '''UPDATE reservations SET status = %s WHERE id = ANY(%s)
+                       RETURNING id, time_slot, table_number, guest_count, customer_id''',
+                    (action, ids)
+                ).fetchall()
+
+                # Send notification emails only for accept/deny
+                for row in rows:
+                    if action == 'pending':
+                        continue
+                    customer = conn.execute(
+                        'SELECT customer_name, email_address FROM customers WHERE id = %s',
+                        (row['customer_id'],)
+                    ).fetchone()
+                    if customer:
+                        if action == 'accepted':
+                            email_accepted(
+                                name=customer['customer_name'],
+                                to=customer['email_address'],
+                                time_slot=row['time_slot'],
+                                table_number=row['table_number'],
+                                guests=row['guest_count'],
+                            )
+                        else:
+                            email_denied(
+                                name=customer['customer_name'],
+                                to=customer['email_address'],
+                                time_slot=row['time_slot'],
+                                guests=row['guest_count'],
+                            )
+
+            conn.commit()
+
+        affected = [r['id'] for r in rows]
+        return jsonify(message=f'{len(affected)} reservation(s) {action}.', ids=affected), 200
+
+    except Exception as e:
+        app.logger.error(f'Bulk action error: {e}')
+        return jsonify(error='Bulk action failed.'), 500
 
 
 @app.get('/api/admin/db/<table_name>')

@@ -288,6 +288,54 @@
 .delete-btn { background: #2a2a2a; color: #888; border: 1px solid #3a3a3a; }
 .delete-btn:hover:not(:disabled) { color: #e06060; border-color: #7a2a2a; }
 
+.pending-btn { background: #3a3000; color: #c8a020; border: 1px solid #5a4800; }
+.pending-btn:hover:not(:disabled) { background: #4a3e00; }
+
+/* ── Bulk toolbar ───────────────────────────────────────────────────────── */
+.bulk-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.6rem 1rem;
+  background: #1a1e2a;
+  border: 1px solid #2a3a5a;
+  border-bottom: none;
+  border-radius: 8px 8px 0 0;
+  flex-wrap: wrap;
+}
+
+.bulk-count {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #7aadff;
+  margin-right: 0.5rem;
+}
+
+.bulk-clear {
+  margin-left: auto;
+  background: transparent;
+  border: none;
+  color: #555;
+  font-size: 0.8rem;
+  cursor: pointer;
+  padding: 0.25rem 0.5rem;
+}
+.bulk-clear:hover { color: #aaa; }
+
+.col-check {
+  width: 36px;
+  text-align: center;
+}
+
+.col-check input[type="checkbox"] {
+  width: 15px;
+  height: 15px;
+  cursor: pointer;
+  accent-color: #b8972a;
+}
+
+.row-selected td { background: #1a1e2a !important; }
+
 /* ── DB panel ───────────────────────────────────────────────────────────── */
 .db-panel {
   margin-top: 2rem;
