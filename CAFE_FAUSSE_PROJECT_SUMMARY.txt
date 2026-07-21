@@ -18,17 +18,27 @@ Public website work completed
 - Restored the restaurant name to Café Fausse and retained the Italian theme.
 - Updated the menu presentation: prices are aligned at the row end and shown
   as clean numbers without a dollar symbol (for example, 8 and 8.5).
+- Added a discreet "All menu prices are in USD" note so the clean price style
+  remains unambiguous to visitors.
 - Added/optimized menu-item images to reduce page-load time.
 - Added founder portraits and a staff group photo on the About page.
 - Added small graphics to the three "Our Commitment" cards.
 - Updated the Gallery with all supplied restaurant photographs, grouped the
   event tile with interior tiles, and placed the behind-the-scenes image last.
 - Added fictitious sources to all awards shown in the Gallery.
+- Improved the reservation page with clear expectations: guests receive an
+  immediate receipt, requests are reviewed before confirmation, and changes
+  or cancellations should be made by phone at least 24 hours in advance.
+- Added visitor-friendly contact actions: click-to-call, click-to-email,
+  address/map links, driving directions, and an embedded location map on the
+  reservation page.
 
 Admin and database work completed
 ---------------------------------
 - Added menu management so an admin can create, update, delete, price, and
   assign photos to menu items. Categories use a dropdown selector.
+- Menu Manager category and item ordering now matches the public menu order:
+  Starters, Main Courses, Desserts, then Beverages.
 - Added reservation management, including pending/accepted/denied states,
   accurate counts, bulk operations, and a calendar/hourly view of accepted
   reservations.
