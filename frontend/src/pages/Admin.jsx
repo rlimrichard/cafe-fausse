@@ -6,10 +6,11 @@ const FILTERS = ['all', 'pending', 'accepted', 'denied']
 const LEVEL_CLASS = { INFO: 'log-info', WARNING: 'log-warn', ERROR: 'log-error', DEBUG: 'log-debug' }
 const EMPTY_MENU_ITEM = { category: 'Starters', name: '', description: '', price: '', image_url: '', display_order: 0 }
 const MENU_CATEGORIES = ['Starters', 'Main Courses', 'Desserts', 'Beverages']
+const ADMIN_SESSION_KEY = 'cafe-fausse-admin-password'
 
 export default function Admin() {
-  const [password, setPassword] = useState('')
-  const [authed, setAuthed] = useState(false)
+  const [password, setPassword] = useState(() => sessionStorage.getItem(ADMIN_SESSION_KEY) || '')
+  const [authed, setAuthed] = useState(() => Boolean(sessionStorage.getItem(ADMIN_SESSION_KEY)))
   const [authError, setAuthError] = useState('')
   const [reservations, setReservations] = useState([])
   const [filter, setFilter] = useState('pending')
@@ -49,7 +50,7 @@ export default function Admin() {
       const res = await fetch('/api/admin/reservations', {
         headers: { 'X-Admin-Password': pwd },
       })
-      if (res.status === 401) { setAuthed(false); setAuthError('Incorrect password.'); return }
+      if (res.status === 401) { endAdminSession(); setAuthError('Incorrect password.'); return }
       const data = await res.json()
       setReservations(Array.isArray(data) ? data : [])
     } catch {
@@ -201,8 +202,17 @@ export default function Admin() {
     } else {
       const data = await res.json()
       setReservations(Array.isArray(data) ? data : [])
+      sessionStorage.setItem(ADMIN_SESSION_KEY, password)
+      window.dispatchEvent(new Event('admin-session-change'))
       setAuthed(true)
     }
+  }
+
+  function endAdminSession() {
+    sessionStorage.removeItem(ADMIN_SESSION_KEY)
+    window.dispatchEvent(new Event('admin-session-change'))
+    setAuthed(false)
+    setPassword('')
   }
 
   async function updateStatus(id, newStatus) {
@@ -324,7 +334,7 @@ export default function Admin() {
           >
             Logs
           </button>
-          <button className="admin-logout" onClick={() => { setAuthed(false); setPassword('') }}>
+          <button className="admin-logout" onClick={endAdminSession}>
             Sign Out
           </button>
         </div>

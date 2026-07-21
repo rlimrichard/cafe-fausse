@@ -38,6 +38,13 @@
   color: var(--gold);
 }
 
+.navbar-links a.admin-navigation-link,
+.navbar-links a.admin-navigation-link.active,
+.navbar-links a.admin-navigation-link:hover {
+  color: #70c9c0;
+  font-weight: 700;
+}
+
 .navbar-toggle {
   display: none;
   flex-direction: column;
