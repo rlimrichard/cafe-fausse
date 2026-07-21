@@ -6,6 +6,7 @@ import logging
 import uuid
 import shutil
 from collections import deque
+from email.utils import formatdate, make_msgid
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from datetime import datetime, timezone
@@ -271,7 +272,12 @@ def send_email(to_address, subject, html_body):
         msg['Subject'] = subject
         msg['From']    = EMAIL_FROM
         msg['To']      = to_address
-        msg.attach(MIMEText(html_body, 'html'))
+        # Supply both formats. This makes the message readable in clients that
+        # block HTML and gives mail filters a normal multipart alternative.
+        msg['Date'] = formatdate(localtime=False)
+        msg['Message-ID'] = make_msgid()
+        msg.attach(MIMEText(plain, 'plain', 'utf-8'))
+        msg.attach(MIMEText(html_body, 'html', 'utf-8'))
         with smtplib.SMTP(SMTP_HOST, SMTP_PORT) as smtp:
             smtp.ehlo()
             smtp.starttls()
