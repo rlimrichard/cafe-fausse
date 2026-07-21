@@ -28,6 +28,7 @@ export default function Admin() {
 
   const [dbTab, setDbTab] = useState('customers')
   const [dbData, setDbData] = useState({})
+  const [dbCounts, setDbCounts] = useState({})
   const [dbLoading, setDbLoading] = useState(false)
   const menuOpen = activeView === 'menu'
   const subscribersOpen = activeView === 'subscribers'
@@ -83,13 +84,31 @@ export default function Admin() {
         headers: { 'X-Admin-Password': pwd },
       })
       const data = await res.json()
-      setDbData(prev => ({ ...prev, [table]: Array.isArray(data) ? data : [] }))
+      const rows = Array.isArray(data) ? data : []
+      setDbData(prev => ({ ...prev, [table]: rows }))
+      if (res.ok) setDbCounts(prev => ({ ...prev, [table]: rows.length }))
     } catch {
       showToast('Failed to load table data.', 'error')
     } finally {
       setDbLoading(false)
     }
   }, [])
+
+  const fetchDbCounts = useCallback(async (pwd) => {
+    try {
+      const res = await fetch('/api/admin/db-counts', {
+        headers: { 'X-Admin-Password': pwd },
+      })
+      const data = await res.json()
+      if (res.ok) setDbCounts(data)
+    } catch {
+      showToast('Failed to load database counts.', 'error')
+    }
+  }, [])
+
+  useEffect(() => {
+    if (authed) fetchDbCounts(password)
+  }, [authed, fetchDbCounts, password])
 
   useEffect(() => {
     if (authed && dbOpen) fetchDbTable(password, dbTab)
@@ -442,7 +461,7 @@ export default function Admin() {
                   onClick={() => setDbTab(t)}
                 >
                   {t}
-                  {dbData[t] && <span className="db-tab-count">{dbData[t].length}</span>}
+                  {typeof dbCounts[t] === 'number' && <span className="db-tab-count">{dbCounts[t]}</span>}
                 </button>
               ))}
             </div>

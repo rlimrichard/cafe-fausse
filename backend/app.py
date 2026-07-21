@@ -758,6 +758,25 @@ def admin_bulk_reservations():
         return jsonify(error='Bulk action failed.'), 500
 
 
+@app.get('/api/admin/db-counts')
+def admin_db_counts():
+    denied = check_admin(request)
+    if denied:
+        return denied
+
+    try:
+        with get_conn() as conn:
+            counts = {
+                'customers': conn.execute('SELECT COUNT(*) AS count FROM customers').fetchone()['count'],
+                'reservations': conn.execute('SELECT COUNT(*) AS count FROM reservations').fetchone()['count'],
+                'menu_items': conn.execute('SELECT COUNT(*) AS count FROM menu_items').fetchone()['count'],
+            }
+        return jsonify(counts), 200
+    except Exception as e:
+        app.logger.error(f'DB count error: {e}')
+        return jsonify(error='Failed to fetch table counts.'), 500
+
+
 @app.get('/api/admin/db/<table_name>')
 def admin_db_table(table_name):
     denied = check_admin(request)
