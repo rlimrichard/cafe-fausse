@@ -127,6 +127,26 @@
 
 .admin-header-actions { display: flex; gap: 0.5rem; align-items: center; }
 
+.admin-insights {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.75rem;
+}
+
+.insight-card {
+  padding: 1rem 1.2rem;
+  border: 1px solid #2a2a2a;
+  border-top: 3px solid #b8972a;
+  background: #171717;
+  display: grid;
+  gap: 0.25rem;
+}
+
+.insight-card span { color: #aaa; font-size: 0.82rem; }
+.insight-card strong { color: #f0f0f0; font-size: 1.75rem; line-height: 1.1; }
+.insight-card small { color: #666; font-size: 0.72rem; }
+
 .admin-logs-toggle {
   padding: 0.4rem 0.9rem;
   background: transparent;
@@ -235,6 +255,47 @@
 .subscribers-panel-header p { margin: 0; color: #888; font-size: 0.85rem; }
 .subscribers-table td:first-child { color: #f0f0f0; }
 
+.calendar-panel {
+  margin-top: 2rem;
+  border: 1px solid #2a2a2a;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #151515;
+}
+
+.calendar-panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.1rem 1.25rem;
+  border-bottom: 1px solid #2a2a2a;
+}
+
+.calendar-panel-header h2 { margin: 0 0 0.25rem; color: #fff; font-size: 1.2rem; }
+.calendar-panel-header p { margin: 0; color: #888; font-size: 0.85rem; }
+.calendar-controls { display: flex; align-items: center; gap: 0.6rem; color: #eee; }
+.calendar-controls .log-btn { min-width: 2rem; font-size: 1.2rem; line-height: 1; }
+
+.calendar-layout { display: grid; grid-template-columns: minmax(360px, 1.15fr) minmax(300px, 1fr); }
+.calendar-month { display: grid; grid-template-columns: repeat(7, 1fr); gap: 1px; background: #2a2a2a; padding: 1px; }
+.calendar-weekday { padding: 0.65rem 0.25rem; background: #1a1a1a; color: #777; font-size: 0.7rem; font-weight: 700; text-align: center; text-transform: uppercase; }
+.calendar-day { position: relative; min-height: 4rem; padding: 0.55rem; background: #111; border: 0; color: #aaa; text-align: left; cursor: pointer; }
+.calendar-day:hover { background: #1e1e1e; color: #fff; }
+.calendar-day.active { box-shadow: inset 0 0 0 2px #b8972a; color: #fff; }
+.calendar-day--empty { min-height: 4rem; background: #0d0d0d; }
+.calendar-day b { position: absolute; right: 0.45rem; bottom: 0.45rem; min-width: 1.15rem; padding: 0.1rem 0.3rem; border-radius: 9px; background: #b8972a; color: #111; font-size: 0.7rem; text-align: center; }
+
+.hourly-schedule { padding: 1.25rem; border-left: 1px solid #2a2a2a; }
+.hourly-schedule h3 { margin: 0 0 1rem; color: #eee; font-size: 1rem; }
+.hour-slot { display: grid; grid-template-columns: 4.5rem 1fr; gap: 0.75rem; padding: 0.6rem 0; border-top: 1px solid #242424; }
+.hour-slot time { color: #b8972a; font-size: 0.8rem; font-weight: 700; }
+.hour-empty { color: #555; font-size: 0.8rem; }
+.schedule-reservation { display: grid; gap: 0.2rem; margin-bottom: 0.6rem; padding: 0.55rem 0.65rem; border-left: 3px solid #2a7a4b; background: #18231c; }
+.schedule-reservation:last-child { margin-bottom: 0; }
+.schedule-reservation strong { color: #eee; font-size: 0.85rem; }
+.schedule-reservation span { color: #9aa99f; font-size: 0.75rem; }
+
 .menu-manager-heading {
   display: flex;
   justify-content: space-between;
@@ -293,6 +354,9 @@
 .menu-manager-item > strong { color: #e6c768; white-space: nowrap; }
 
 @media (max-width: 800px) {
+  .admin-insights { grid-template-columns: 1fr; }
+  .calendar-layout { grid-template-columns: 1fr; }
+  .hourly-schedule { border-left: 0; border-top: 1px solid #2a2a2a; }
   .menu-editor { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .menu-manager-item { grid-template-columns: 4rem minmax(0, 1fr) auto; }
   .menu-manager-item .res-actions { grid-column: 2 / -1; }

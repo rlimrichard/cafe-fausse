@@ -30,8 +30,10 @@ export default function Admin() {
   const [dbData, setDbData] = useState({})
   const [dbCounts, setDbCounts] = useState({})
   const [dbLoading, setDbLoading] = useState(false)
+  const [insights, setInsights] = useState(null)
   const menuOpen = activeView === 'menu'
   const subscribersOpen = activeView === 'subscribers'
+  const calendarOpen = activeView === 'calendar'
   const dbOpen = activeView === 'database'
   const logsOpen = activeView === 'logs'
 
@@ -109,6 +111,22 @@ export default function Admin() {
   useEffect(() => {
     if (authed) fetchDbCounts(password)
   }, [authed, fetchDbCounts, password])
+
+  const fetchInsights = useCallback(async (pwd) => {
+    try {
+      const res = await fetch('/api/admin/insights', {
+        headers: { 'X-Admin-Password': pwd },
+      })
+      const data = await res.json()
+      if (res.ok) setInsights(data)
+    } catch {
+      showToast('Failed to load visitor insights.', 'error')
+    }
+  }, [])
+
+  useEffect(() => {
+    if (authed) fetchInsights(password)
+  }, [authed, fetchInsights, password])
 
   useEffect(() => {
     if (authed && dbOpen) fetchDbTable(password, dbTab)
@@ -289,6 +307,12 @@ export default function Admin() {
             Subscribers
           </button>
           <button
+            className={`admin-logs-toggle${calendarOpen ? ' active' : ''}`}
+            onClick={() => setActiveView('calendar')}
+          >
+            Calendar
+          </button>
+          <button
             className={`admin-logs-toggle${dbOpen ? ' active' : ''}`}
             onClick={() => setActiveView('database')}
           >
@@ -305,6 +329,24 @@ export default function Admin() {
           </button>
         </div>
       </div>
+
+      <section className="admin-insights" aria-label="Visitor insights">
+        <div className="insight-card">
+          <span>Unique visitors</span>
+          <strong>{insights ? insights.unique_visitors : '—'}</strong>
+          <small>All time</small>
+        </div>
+        <div className="insight-card">
+          <span>Visitors today</span>
+          <strong>{insights ? insights.visitors_today : '—'}</strong>
+          <small>Unique anonymous visitors</small>
+        </div>
+        <div className="insight-card">
+          <span>Page visits</span>
+          <strong>{insights ? insights.visit_events : '—'}</strong>
+          <small>All recorded page views</small>
+        </div>
+      </section>
 
       {activeView === 'reservations' && <>
       <div className="admin-filters">
@@ -449,6 +491,8 @@ export default function Admin() {
 
       {subscribersOpen && <NewsletterSubscribers password={password} showToast={showToast} />}
 
+      {calendarOpen && <ReservationCalendar reservations={reservations} />}
+
       {dbOpen && (
         <div className="db-panel">
           <div className="db-panel-header">
@@ -538,6 +582,89 @@ export default function Admin() {
         </div>
       )}
     </div>
+  )
+}
+
+function ReservationCalendar({ reservations }) {
+  const accepted = reservations.filter(reservation => reservation.status === 'accepted')
+  const [month, setMonth] = useState(() => new Date(new Date().getFullYear(), new Date().getMonth(), 1))
+  const [selectedDay, setSelectedDay] = useState(() => localDateKey(new Date()))
+  const firstWeekday = month.getDay()
+  const daysInMonth = new Date(month.getFullYear(), month.getMonth() + 1, 0).getDate()
+  const days = Array.from({ length: firstWeekday + daysInMonth }, (_, index) => {
+    if (index < firstWeekday) return null
+    return new Date(month.getFullYear(), month.getMonth(), index - firstWeekday + 1)
+  })
+  const reservationsByDay = accepted.reduce((groups, reservation) => {
+    const key = localDateKey(new Date(reservation.time_slot))
+    groups[key] = [...(groups[key] || []), reservation]
+    return groups
+  }, {})
+  const selectedReservations = (reservationsByDay[selectedDay] || [])
+    .sort((left, right) => new Date(left.time_slot) - new Date(right.time_slot))
+  const defaultHours = Array.from({ length: 6 }, (_, index) => index + 17)
+  const reservationHours = selectedReservations.map(reservation => new Date(reservation.time_slot).getHours())
+  const hourlySlots = [...new Set([...defaultHours, ...reservationHours])].sort((left, right) => left - right)
+
+  function changeMonth(offset) {
+    const nextMonth = new Date(month.getFullYear(), month.getMonth() + offset, 1)
+    setMonth(nextMonth)
+    setSelectedDay(localDateKey(nextMonth))
+  }
+
+  return (
+    <section className="calendar-panel">
+      <div className="calendar-panel-header">
+        <div>
+          <h2>Accepted Reservations</h2>
+          <p>{accepted.length} confirmed reservation{accepted.length === 1 ? '' : 's'} shown by service time.</p>
+        </div>
+        <div className="calendar-controls">
+          <button className="log-btn" onClick={() => changeMonth(-1)} aria-label="Previous month">‹</button>
+          <strong>{month.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}</strong>
+          <button className="log-btn" onClick={() => changeMonth(1)} aria-label="Next month">›</button>
+        </div>
+      </div>
+      <div className="calendar-layout">
+        <div className="calendar-month">
+          {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => <span key={day} className="calendar-weekday">{day}</span>)}
+          {days.map((day, index) => {
+            if (!day) return <span key={`empty-${index}`} className="calendar-day calendar-day--empty" />
+            const key = localDateKey(day)
+            const count = (reservationsByDay[key] || []).length
+            return (
+              <button
+                key={key}
+                className={`calendar-day${key === selectedDay ? ' active' : ''}${count ? ' has-reservations' : ''}`}
+                onClick={() => setSelectedDay(key)}
+              >
+                <span>{day.getDate()}</span>
+                {count > 0 && <b>{count}</b>}
+              </button>
+            )
+          })}
+        </div>
+        <div className="hourly-schedule">
+          <h3>{new Date(`${selectedDay}T12:00:00`).toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })}</h3>
+          {hourlySlots.map(hour => {
+            const slotReservations = selectedReservations.filter(reservation => new Date(reservation.time_slot).getHours() === hour)
+            return (
+              <div className="hour-slot" key={hour}>
+                <time>{formatScheduleHour(hour)}</time>
+                <div>
+                  {slotReservations.length === 0 ? <span className="hour-empty">No accepted reservations</span> : slotReservations.map(reservation => (
+                    <article key={reservation.id} className="schedule-reservation">
+                      <strong>{reservation.name}</strong>
+                      <span>Table {reservation.table_number} · {reservation.guests} guest{reservation.guests === 1 ? '' : 's'} · {formatTimeOnly(reservation.time_slot)}</span>
+                    </article>
+                  ))}
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      </div>
+    </section>
   )
 }
 
@@ -730,6 +857,25 @@ function formatDateTime(iso) {
   return new Date(iso).toLocaleString('en-US', {
     weekday: 'short', month: 'short', day: 'numeric',
     year: 'numeric', hour: 'numeric', minute: '2-digit',
+  })
+}
+
+function localDateKey(date) {
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
+
+function formatScheduleHour(hour) {
+  return new Date(2000, 0, 1, hour).toLocaleTimeString('en-US', {
+    hour: 'numeric', minute: '2-digit',
+  })
+}
+
+function formatTimeOnly(iso) {
+  return new Date(iso).toLocaleTimeString('en-US', {
+    hour: 'numeric', minute: '2-digit',
   })
 }
 

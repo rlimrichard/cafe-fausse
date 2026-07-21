@@ -1,4 +1,5 @@
-import { Routes, Route } from 'react-router-dom'
+import { useEffect } from 'react'
+import { Routes, Route, useLocation } from 'react-router-dom'
 import Navbar from './components/Navbar'
 import Footer from './components/Footer'
 import Home from './pages/Home'
@@ -9,6 +10,23 @@ import Gallery from './pages/Gallery'
 import Admin from './pages/Admin'
 
 export default function App() {
+  const location = useLocation()
+
+  useEffect(() => {
+    if (location.pathname === '/admin') return
+    const storageKey = 'trattoria-bellavista-visitor-id'
+    let visitorId = localStorage.getItem(storageKey)
+    if (!visitorId) {
+      visitorId = crypto.randomUUID()
+      localStorage.setItem(storageKey, visitorId)
+    }
+    fetch('/api/visits', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ visitor_id: visitorId, path: location.pathname }),
+    }).catch(() => {})
+  }, [location.pathname])
+
   return (
     <>
       <Navbar />

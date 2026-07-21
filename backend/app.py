@@ -145,6 +145,24 @@ def ensure_menu_table():
         app.logger.warning(f'Menu table setup skipped: {e}')
 
 
+def ensure_visitor_table():
+    """Create anonymous, persistent visit tracking for the admin dashboard."""
+    try:
+        with get_conn() as conn:
+            conn.execute('''
+                CREATE TABLE IF NOT EXISTS visitor_events (
+                    id SERIAL PRIMARY KEY,
+                    visitor_id UUID NOT NULL,
+                    path VARCHAR(200) NOT NULL,
+                    visited_at TIMESTAMP NOT NULL DEFAULT NOW()
+                )
+            ''')
+            conn.execute('CREATE INDEX IF NOT EXISTS visitor_events_visited_at_idx ON visitor_events (visited_at DESC)')
+            conn.commit()
+    except Exception as e:
+        app.logger.warning(f'Visitor tracking setup skipped: {e}')
+
+
 def serialize_menu_item(row):
     return {
         'id': row['id'],
@@ -318,6 +336,32 @@ def email_denied(name, to, time_slot, guests):
 
 
 ensure_menu_table()
+ensure_visitor_table()
+
+
+@app.post('/api/visits')
+def record_visit():
+    data = request.get_json(silent=True) or {}
+    visitor_id = (data.get('visitor_id') or '').strip()
+    path = (data.get('path') or '/').strip()
+    try:
+        visitor_id = str(uuid.UUID(visitor_id))
+    except (ValueError, AttributeError):
+        return jsonify(error='Invalid visitor ID.'), 400
+    if not path.startswith('/') or len(path) > 200:
+        return jsonify(error='Invalid path.'), 400
+
+    try:
+        with get_conn() as conn:
+            conn.execute(
+                'INSERT INTO visitor_events (visitor_id, path) VALUES (%s, %s)',
+                (visitor_id, path)
+            )
+            conn.commit()
+        return '', 204
+    except Exception as e:
+        app.logger.error(f'Visit tracking error: {e}')
+        return jsonify(error='Unable to record visit.'), 500
 
 
 @app.post('/api/reservations')
@@ -756,6 +800,27 @@ def admin_bulk_reservations():
     except Exception as e:
         app.logger.error(f'Bulk action error: {e}')
         return jsonify(error='Bulk action failed.'), 500
+
+
+@app.get('/api/admin/insights')
+def admin_insights():
+    denied = check_admin(request)
+    if denied:
+        return denied
+
+    try:
+        with get_conn() as conn:
+            totals = conn.execute('''
+                SELECT
+                    COUNT(DISTINCT visitor_id) AS unique_visitors,
+                    COUNT(*) AS visit_events,
+                    COUNT(DISTINCT visitor_id) FILTER (WHERE visited_at::date = CURRENT_DATE) AS visitors_today
+                FROM visitor_events
+            ''').fetchone()
+        return jsonify(dict(totals)), 200
+    except Exception as e:
+        app.logger.error(f'Admin insights error: {e}')
+        return jsonify(error='Failed to fetch visitor insights.'), 500
 
 
 @app.get('/api/admin/db-counts')
