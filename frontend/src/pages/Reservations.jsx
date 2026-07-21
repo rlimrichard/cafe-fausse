@@ -39,12 +39,16 @@ export default function Reservations() {
     if (!form.time) errs.time = 'Please select a time.'
     if (form.date && form.time) {
       const dt = new Date(`${form.date}T${form.time}:00`)
-      const day = dt.getDay()
-      const hour = dt.getHours()
-      const minutes = dt.getMinutes()
-      const { open, close } = HOURS[day]
-      if (hour < open || hour >= close || (hour === close - 1 && minutes > 0 && close === 23)) {
-        errs.time = `Sorry, we are not open at that time. Hours: Mon–Sat 5–11 PM, Sun 5–9 PM.`
+      if (dt <= new Date()) {
+        errs.time = 'Please select a future date and time.'
+      } else {
+        const day = dt.getDay()
+        const hour = dt.getHours()
+        const minutes = dt.getMinutes()
+        const { open, close } = HOURS[day]
+        if (hour < open || hour >= close || (hour === close - 1 && minutes > 0 && close === 23)) {
+          errs.time = `Sorry, we are not open at that time. Hours: Mon–Sat 5–11 PM, Sun 5–9 PM.`
+        }
       }
     }
     if (!form.name.trim()) errs.name = 'Name is required.'

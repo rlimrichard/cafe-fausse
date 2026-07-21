@@ -196,6 +196,9 @@ def create_reservation():
     except (ValueError, TypeError):
         return jsonify(error='Invalid date/time format.'), 400
 
+    if dt <= datetime.now():
+        return jsonify(error='Reservations must be made for a future date and time.'), 400
+
     if not is_valid_time_slot(dt):
         return jsonify(error='The selected time is outside our operating hours. Mon–Sat 5–11 PM, Sun 5–9 PM.'), 400
 
