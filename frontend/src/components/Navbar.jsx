@@ -8,7 +8,7 @@ export default function Navbar() {
   return (
     <header className="navbar">
       <div className="navbar-inner container">
-        <NavLink to="/" className="navbar-brand">Trattoria Bellavista</NavLink>
+        <NavLink to="/" className="navbar-brand">Café Fausse</NavLink>
         <button
           className={`navbar-toggle ${open ? 'active' : ''}`}
           onClick={() => setOpen(o => !o)}

@@ -6,7 +6,7 @@ export default function Home() {
     <div className="home">
       <section className="hero">
         <div className="hero-overlay">
-          <h1>Trattoria Bellavista</h1>
+          <h1>Café Fausse</h1>
           <p>Traditional Italian flavors meet modern culinary innovation</p>
           <div className="hero-actions">
             <Link to="/reservations" className="btn btn-primary">Reserve a Table</Link>
@@ -21,7 +21,7 @@ export default function Home() {
           <h2 className="section-title">An Unforgettable Dining Experience</h2>
           <div className="divider" />
           <p className="welcome-text">
-            Founded in 2010 by Chef Antonio Rossi and restaurateur Maria Lopez, Trattoria Bellavista has become
+            Founded in 2010 by Chef Antonio Rossi and restaurateur Maria Lopez, Café Fausse has become
             Washington DC's premier destination for refined Italian dining. Every dish is crafted from
             locally sourced ingredients, delivering quality and creativity on every plate.
           </p>

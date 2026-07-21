@@ -275,11 +275,11 @@ def send_email(to_address, subject, html_body):
 
 
 def email_accepted(name, to, time_slot, table_number, guests):
-    subject = 'Your Trattoria Bellavista Reservation is Confirmed'
+    subject = 'Your Café Fausse Reservation is Confirmed'
     html = f'''
     <div style="font-family:Georgia,serif;max-width:560px;margin:0 auto;color:#1a1a1a">
       <div style="background:#1a1a1a;padding:24px 32px">
-        <h1 style="color:#b8972a;margin:0;font-size:1.4rem;letter-spacing:0.05em">TRATTORIA BELLAVISTA</h1>
+        <h1 style="color:#b8972a;margin:0;font-size:1.4rem;letter-spacing:0.05em">CAFÉ FAUSSE</h1>
       </div>
       <div style="padding:32px">
         <h2 style="margin-top:0">Reservation Confirmed</h2>
@@ -297,10 +297,10 @@ def email_accepted(name, to, time_slot, table_number, guests):
            at least 24 hours in advance.</p>
         <p style="color:#888;font-size:0.875rem">1234 Culinary Ave, Suite 100 · Washington, DC 20002<br>
            Mon–Sat 5–11 PM · Sun 5–9 PM</p>
-        <p>Warm regards,<br><strong>The Trattoria Bellavista Team</strong></p>
+        <p>Warm regards,<br><strong>The Café Fausse Team</strong></p>
       </div>
       <div style="background:#f0ebe0;padding:16px 32px;font-size:0.75rem;color:#888;text-align:center">
-        © Trattoria Bellavista · 1234 Culinary Ave, Washington, DC
+        © Café Fausse · 1234 Culinary Ave, Washington, DC
       </div>
     </div>
     '''
@@ -308,11 +308,11 @@ def email_accepted(name, to, time_slot, table_number, guests):
 
 
 def email_denied(name, to, time_slot, guests):
-    subject = 'Update on Your Trattoria Bellavista Reservation Request'
+    subject = 'Update on Your Café Fausse Reservation Request'
     html = f'''
     <div style="font-family:Georgia,serif;max-width:560px;margin:0 auto;color:#1a1a1a">
       <div style="background:#1a1a1a;padding:24px 32px">
-        <h1 style="color:#b8972a;margin:0;font-size:1.4rem;letter-spacing:0.05em">TRATTORIA BELLAVISTA</h1>
+        <h1 style="color:#b8972a;margin:0;font-size:1.4rem;letter-spacing:0.05em">CAFÉ FAUSSE</h1>
       </div>
       <div style="padding:32px">
         <h2 style="margin-top:0">We're Sorry</h2>
@@ -325,10 +325,10 @@ def email_denied(name, to, time_slot, guests):
         <p style="font-size:1.25rem;font-weight:bold;color:#b8972a">(202) 555-4567</p>
         <p style="color:#888;font-size:0.875rem">1234 Culinary Ave, Suite 100 · Washington, DC 20002<br>
            Mon–Sat 5–11 PM · Sun 5–9 PM</p>
-        <p>We hope to welcome you soon.<br><strong>The Trattoria Bellavista Team</strong></p>
+        <p>We hope to welcome you soon.<br><strong>The Café Fausse Team</strong></p>
       </div>
       <div style="background:#f0ebe0;padding:16px 32px;font-size:0.75rem;color:#888;text-align:center">
-        © Trattoria Bellavista · 1234 Culinary Ave, Washington, DC
+        © Café Fausse · 1234 Culinary Ave, Washington, DC
       </div>
     </div>
     '''
