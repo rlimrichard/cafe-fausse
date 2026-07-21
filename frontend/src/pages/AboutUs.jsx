@@ -13,8 +13,8 @@ export default function AboutUs() {
 
         <div className="about-intro">
           <p>
-            Founded in 2010 by Chef Antonio Rossi and restaurateur Maria Lopez, Café Fausse blends
-            traditional Italian flavors with modern culinary innovation. Our mission is to provide an
+            Founded in 2010 by Chef Lukas Weber and restaurateur Anna Müller, Café Fausse blends
+            traditional German flavors with modern culinary innovation. Our mission is to provide an
             unforgettable dining experience that reflects both quality and creativity.
           </p>
           <p>
@@ -33,24 +33,24 @@ export default function AboutUs() {
           <h2>Meet the Founders</h2>
           <div className="founders-grid">
             <div className="founder-card">
-              <img className="founder-photo" src={antonioRossiPortrait} alt="Chef Antonio Rossi" />
-              <h3>Chef Antonio Rossi</h3>
+              <img className="founder-photo" src={antonioRossiPortrait} alt="Chef Lukas Weber" />
+              <h3>Chef Lukas Weber</h3>
               <p className="founder-title">Executive Chef & Co-Founder</p>
               <p>
-                Chef Antonio Rossi brings over 25 years of culinary expertise to Café Fausse.
-                Trained in the kitchens of Milan and Rome, Antonio has dedicated his career to
-                honoring classical Italian techniques while embracing contemporary creativity.
+                Chef Lukas Weber brings over 25 years of culinary expertise to Café Fausse.
+                Trained in the kitchens of Berlin and Munich, Lukas has dedicated his career to
+                honoring classical German techniques while embracing contemporary creativity.
                 His passion for locally sourced, seasonal ingredients defines every dish on the menu.
               </p>
             </div>
             <div className="founder-card">
-              <img className="founder-photo" src={mariaLopezPortrait} alt="Maria Lopez" />
-              <h3>Maria Lopez</h3>
+              <img className="founder-photo" src={mariaLopezPortrait} alt="Anna Müller" />
+              <h3>Anna Müller</h3>
               <p className="founder-title">Restaurateur & Co-Founder</p>
               <p>
-                Maria Lopez brings a sophisticated vision for hospitality and guest experience to
+                Anna Müller brings a sophisticated vision for hospitality and guest experience to
                 Café Fausse. With a background in luxury hotel management and an innate sense for
-                ambiance, Maria has shaped the restaurant into a warm and elegant destination where
+                ambiance, Anna has shaped the restaurant into a warm and elegant destination where
                 every guest feels personally welcomed.
               </p>
             </div>
