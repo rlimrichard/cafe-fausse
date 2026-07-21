@@ -275,7 +275,7 @@ def send_email(to_address, subject, html_body):
         # Supply both formats. This makes the message readable in clients that
         # block HTML and gives mail filters a normal multipart alternative.
         msg['Date'] = formatdate(localtime=False)
-        msg['Message-ID'] = make_msgid()
+        msg['Message-ID'] = make_msgid(domain=SMTP_USER.rsplit('@', 1)[-1])
         msg.attach(MIMEText(plain, 'plain', 'utf-8'))
         msg.attach(MIMEText(html_body, 'html', 'utf-8'))
         with smtplib.SMTP(SMTP_HOST, SMTP_PORT) as smtp:
@@ -320,7 +320,7 @@ def email_accepted(name, to, time_slot, table_number, guests):
       </div>
     </div>
     '''
-    send_email(to, subject, html)
+    return send_email(to, subject, html)
 
 
 def email_denied(name, to, time_slot, guests):
@@ -348,7 +348,28 @@ def email_denied(name, to, time_slot, guests):
       </div>
     </div>
     '''
-    send_email(to, subject, html)
+    return send_email(to, subject, html)
+
+
+def email_reservation_received(name, to, time_slot, guests):
+    """Confirm that a reservation request was received and is awaiting review."""
+    subject = 'We received your Cafe Fausse reservation request'
+    html = f'''
+    <div style="font-family:Georgia,serif;max-width:560px;margin:0 auto;color:#1a1a1a">
+      <div style="background:#1a1a1a;padding:24px 32px">
+        <h1 style="color:#b8972a;margin:0;font-size:1.4rem;letter-spacing:0.05em">CAFE FAUSSE</h1>
+      </div>
+      <div style="padding:32px">
+        <h2 style="margin-top:0">Reservation request received</h2>
+        <p>Dear {name},</p>
+        <p>Thank you for your reservation request. Our team will review it shortly and email you once it is confirmed.</p>
+        <p><strong>Requested time:</strong> {fmt_dt(time_slot)}<br>
+           <strong>Guests:</strong> {guests}</p>
+        <p>Warm regards,<br><strong>The Cafe Fausse Team</strong></p>
+      </div>
+    </div>
+    '''
+    return send_email(to, subject, html)
 
 
 def email_newsletter_welcome(to):
@@ -475,6 +496,9 @@ def create_reservation():
                 (customer_id, dt, table, guests, 'pending')
             ).fetchone()
             conn.commit()
+
+        # A mail problem must not undo a successfully saved reservation.
+        email_reservation_received(name, email, dt, guests)
 
         return jsonify(
             message='Your reservation request has been received. The restaurant will confirm shortly.',
