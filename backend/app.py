@@ -447,11 +447,28 @@ def create_reservation():
 
             table = random.choice(available)
 
+            # An email can already belong to a newsletter subscriber or an
+            # earlier guest. Reuse that customer rather than failing on the
+            # unique email constraint when they make another reservation.
             row = conn.execute(
-                'INSERT INTO customers (customer_name, email_address, phone_number, newsletter_signup) VALUES (%s, %s, %s, %s) RETURNING id',
-                (name, email, phone, False)
+                'SELECT id FROM customers WHERE LOWER(email_address) = %s',
+                (email,)
             ).fetchone()
-            customer_id = row['id']
+            if row:
+                customer_id = row['id']
+                conn.execute(
+                    '''UPDATE customers
+                       SET customer_name = %s,
+                           phone_number = COALESCE(%s, phone_number)
+                       WHERE id = %s''',
+                    (name, phone, customer_id)
+                )
+            else:
+                row = conn.execute(
+                    'INSERT INTO customers (customer_name, email_address, phone_number, newsletter_signup) VALUES (%s, %s, %s, %s) RETURNING id',
+                    (name, email, phone, False)
+                ).fetchone()
+                customer_id = row['id']
 
             res_row = conn.execute(
                 'INSERT INTO reservations (customer_id, time_slot, table_number, guest_count, status) VALUES (%s, %s, %s, %s, %s) RETURNING id',
