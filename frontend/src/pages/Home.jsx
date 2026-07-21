@@ -60,10 +60,12 @@ export default function Home() {
             <div className="award-item">
               <span className="award-year">2022</span>
               <h4>Culinary Excellence Award</h4>
+              <p>Gusto Quarterly</p>
             </div>
             <div className="award-item">
               <span className="award-year">2023</span>
               <h4>Restaurant of the Year</h4>
+              <p>The Table Guide</p>
             </div>
             <div className="award-item">
               <span className="award-year">2023</span>
