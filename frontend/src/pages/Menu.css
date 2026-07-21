@@ -22,11 +22,18 @@
 
 .menu-item {
   display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
+  align-items: center;
   gap: 1rem;
   padding: 1.25rem 1.5rem;
   background: #fff;
+  border: 1px solid #e8e0d0;
+}
+
+.menu-item-image {
+  width: 9rem;
+  height: 7rem;
+  flex: 0 0 auto;
+  object-fit: cover;
   border: 1px solid #e8e0d0;
 }
 
@@ -47,4 +54,20 @@
   color: var(--gold);
   white-space: nowrap;
   font-weight: 700;
+}
+
+@media (max-width: 600px) {
+  .menu-item {
+    align-items: flex-start;
+    padding: 1rem;
+  }
+
+  .menu-item-image {
+    width: 5.5rem;
+    height: 5.5rem;
+  }
+
+  .menu-item-price {
+    font-size: 1rem;
+  }
 }
