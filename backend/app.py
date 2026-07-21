@@ -4,6 +4,7 @@ import re
 import smtplib
 import logging
 import uuid
+import shutil
 from collections import deque
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
@@ -49,6 +50,19 @@ EMAIL_FROM    = os.environ.get('EMAIL_FROM', SMTP_USER)
 MENU_UPLOAD_DIR = os.environ.get('MENU_UPLOAD_DIR', os.path.join(os.path.dirname(__file__), 'uploads', 'menu'))
 MAX_MENU_IMAGE_BYTES = 5 * 1024 * 1024
 ALLOWED_MENU_IMAGE_EXTENSIONS = {'.jpg', '.jpeg', '.png', '.webp'}
+DEFAULT_MENU_IMAGES = {
+    'Bruschetta': 'bruschetta.png',
+    'Caesar Salad': 'caesar-salad.png',
+    'Grilled Salmon': 'grilled-salmon.png',
+    'Ribeye Steak': 'ribeye-steak.png',
+    'Vegetable Risotto': 'vegetable-risotto.png',
+    'Tiramisu': 'tiramisu.png',
+    'Cheesecake': 'cheesecake.png',
+    'Red Wine (Glass)': 'red-wine.png',
+    'White Wine (Glass)': 'white-wine.png',
+    'Craft Beer': 'craft-beer.png',
+    'Espresso': 'espresso.png',
+}
 
 os.makedirs(MENU_UPLOAD_DIR, exist_ok=True)
 app.config['MAX_CONTENT_LENGTH'] = MAX_MENU_IMAGE_BYTES
@@ -88,6 +102,7 @@ def ensure_menu_table():
     ]
     try:
         with get_conn() as conn:
+            table_exists = conn.execute("SELECT to_regclass('public.menu_items') AS table_name").fetchone()['table_name'] is not None
             conn.execute('''
                 CREATE TABLE IF NOT EXISTS menu_items (
                     id SERIAL PRIMARY KEY,
@@ -101,12 +116,25 @@ def ensure_menu_table():
                     updated_at TIMESTAMP NOT NULL DEFAULT NOW()
                 )
             ''')
-            for item in seed_items:
-                conn.execute('''
-                    INSERT INTO menu_items (category, item_name, description, price, display_order)
-                    VALUES (%s, %s, %s, %s, %s)
-                    ON CONFLICT (item_name) DO NOTHING
-                ''', item)
+            image_source_dir = os.path.normpath(os.path.join(os.path.dirname(__file__), '..', 'frontend', 'src', 'assets', 'menu'))
+            image_urls = {}
+            for item_name, source_name in DEFAULT_MENU_IMAGES.items():
+                source_path = os.path.join(image_source_dir, source_name)
+                target_name = f'default-{source_name}'
+                target_path = os.path.join(MENU_UPLOAD_DIR, target_name)
+                if os.path.isfile(source_path) and not os.path.isfile(target_path):
+                    shutil.copyfile(source_path, target_path)
+                if os.path.isfile(target_path):
+                    image_urls[item_name] = f'/api/menu-images/{target_name}'
+            if not table_exists:
+                for category, item_name, description, price, display_order in seed_items:
+                    conn.execute('''
+                        INSERT INTO menu_items (category, item_name, description, price, image_url, display_order)
+                        VALUES (%s, %s, %s, %s, %s, %s)
+                    ''', (category, item_name, description, price, image_urls.get(item_name), display_order))
+            else:
+                for item_name, image_url in image_urls.items():
+                    conn.execute('UPDATE menu_items SET image_url = %s WHERE item_name = %s AND image_url IS NULL', (image_url, item_name))
             conn.commit()
     except Exception as e:
         app.logger.warning(f'Menu table setup skipped: {e}')
