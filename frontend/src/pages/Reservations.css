@@ -177,11 +177,129 @@
   filter: grayscale(0.35) contrast(0.9);
 }
 
+.reservation-lookup {
+  margin-top: 4rem;
+  padding: 2.5rem;
+  background: #fff;
+  border: 1px solid #e8e0d0;
+}
+
+.reservation-lookup h2 {
+  color: var(--dark);
+  font-size: 1.6rem;
+  margin-bottom: 0.5rem;
+}
+
+.reservation-lookup > div > p:last-child {
+  color: var(--text-muted);
+  max-width: 42rem;
+  line-height: 1.6;
+}
+
+.lookup-form {
+  display: grid;
+  grid-template-columns: 1fr 1fr auto;
+  gap: 1rem;
+  align-items: end;
+  margin-top: 1.5rem;
+}
+
+.lookup-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.lookup-form input {
+  min-width: 0;
+  padding: 0.75rem 1rem;
+  border: 1px solid #d0c8b8;
+  background: #fdfaf5;
+  color: var(--text);
+  font-family: var(--font-sans);
+  font-size: 0.95rem;
+}
+
+.lookup-form input:focus {
+  outline: none;
+  border-color: var(--gold);
+}
+
+.lookup-form button {
+  min-height: 2.8rem;
+  padding: 0.75rem 1.25rem;
+  white-space: nowrap;
+}
+
+.lookup-message {
+  margin-top: 1.25rem;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+.lookup-message--error {
+  color: #b71c1c;
+}
+
+.lookup-results {
+  display: grid;
+  gap: 0.75rem;
+  margin-top: 1.25rem;
+}
+
+.lookup-result {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem 1.25rem;
+  background: #fdfaf5;
+  border-left: 3px solid var(--gold);
+}
+
+.lookup-result div {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.lookup-result strong {
+  color: var(--dark);
+}
+
+.lookup-result div span {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+}
+
+.lookup-status {
+  padding: 0.3rem 0.55rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.lookup-status--pending { background: #fff0c9; color: #895e00; }
+.lookup-status--accepted { background: #e5f4e5; color: #27732d; }
+.lookup-status--denied { background: #fde2e0; color: #a52e28; }
+
 @media (max-width: 768px) {
   .reservations-layout {
     grid-template-columns: 1fr;
   }
   .form-row {
     grid-template-columns: 1fr;
+  }
+  .lookup-form {
+    grid-template-columns: 1fr;
+  }
+  .lookup-form button {
+    width: 100%;
   }
 }

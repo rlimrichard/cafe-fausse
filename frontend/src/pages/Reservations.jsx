@@ -22,15 +22,23 @@ function buildTimeOptions() {
 const TIME_OPTIONS = buildTimeOptions()
 
 const INITIAL = { date: '', time: '', guests: 2, name: '', email: '', phone: '' }
+const LOOKUP_INITIAL = { email: '', phone: '' }
 
 export default function Reservations() {
   const [form, setForm] = useState(INITIAL)
   const [status, setStatus] = useState(null)
   const [result, setResult] = useState(null)
   const [errors, setErrors] = useState({})
+  const [lookupForm, setLookupForm] = useState(LOOKUP_INITIAL)
+  const [lookupStatus, setLookupStatus] = useState(null)
+  const [lookupResults, setLookupResults] = useState([])
 
   function set(field) {
     return e => setForm(f => ({ ...f, [field]: e.target.value }))
+  }
+
+  function setLookup(field) {
+    return e => setLookupForm(current => ({ ...current, [field]: e.target.value }))
   }
 
   function validate() {
@@ -54,8 +62,32 @@ export default function Reservations() {
     if (!form.name.trim()) errs.name = 'Name is required.'
     if (!form.email.trim()) errs.email = 'Email is required.'
     else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) errs.email = 'Please enter a valid email.'
+    if (!form.phone.trim()) errs.phone = 'Phone number is required.'
+    else if (form.phone.replace(/\D/g, '').length < 7) errs.phone = 'Please enter a valid phone number.'
     if (!form.guests || form.guests < 1 || form.guests > 30) errs.guests = 'Guests must be between 1 and 30.'
     return errs
+  }
+
+  async function handleLookup(event) {
+    event.preventDefault()
+    setLookupStatus('loading')
+    setLookupResults([])
+    try {
+      const res = await fetch('/api/reservations/lookup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(lookupForm),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        setLookupStatus({ error: data.error || 'Unable to look up reservation requests.' })
+        return
+      }
+      setLookupResults(Array.isArray(data) ? data : [])
+      setLookupStatus('success')
+    } catch {
+      setLookupStatus({ error: 'Network error. Please try again.' })
+    }
   }
 
   async function handleSubmit(e) {
@@ -139,8 +171,9 @@ export default function Reservations() {
             </div>
 
             <div className="form-group">
-              <label htmlFor="phone">Phone Number <span className="optional">(optional)</span></label>
-              <input id="phone" type="tel" placeholder="(202) 555-0000" value={form.phone} onChange={set('phone')} />
+              <label htmlFor="phone">Phone Number</label>
+              <input id="phone" required type="tel" placeholder="(202) 555-0000" value={form.phone} onChange={set('phone')} />
+              {errors.phone && <span className="field-error">{errors.phone}</span>}
             </div>
 
             <p className="reservation-expectations">
@@ -183,6 +216,43 @@ export default function Reservations() {
             />
           </aside>
         </div>
+
+        <section className="reservation-lookup" aria-labelledby="reservation-lookup-title">
+          <div>
+            <p className="section-subtitle">Already Requested?</p>
+            <h2 id="reservation-lookup-title">Look Up a Reservation Request</h2>
+            <p>Enter the email address and phone number used for your request to view its current status.</p>
+          </div>
+          <form className="lookup-form" onSubmit={handleLookup}>
+            <label>Email Address
+              <input required type="email" placeholder="jane@example.com" value={lookupForm.email} onChange={setLookup('email')} />
+            </label>
+            <label>Phone Number
+              <input required type="tel" placeholder="(202) 555-0000" value={lookupForm.phone} onChange={setLookup('phone')} />
+            </label>
+            <button className="btn btn-primary" type="submit" disabled={lookupStatus === 'loading'}>
+              {lookupStatus === 'loading' ? 'Looking up...' : 'Look Up Request'}
+            </button>
+          </form>
+
+          {lookupStatus?.error && <p className="lookup-message lookup-message--error">{lookupStatus.error}</p>}
+          {lookupStatus === 'success' && lookupResults.length === 0 && (
+            <p className="lookup-message">No reservation requests matched those details.</p>
+          )}
+          {lookupResults.length > 0 && (
+            <div className="lookup-results" aria-live="polite">
+              {lookupResults.map(reservation => (
+                <article key={reservation.id} className="lookup-result">
+                  <div>
+                    <strong>{formatSlot(reservation.time_slot)}</strong>
+                    <span>{reservation.guests} guest{reservation.guests === 1 ? '' : 's'}</span>
+                  </div>
+                  <span className={`lookup-status lookup-status--${reservation.status}`}>{reservation.status}</span>
+                </article>
+              ))}
+            </div>
+          )}
+        </section>
       </div>
     </div>
   )

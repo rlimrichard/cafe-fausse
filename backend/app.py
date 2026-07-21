@@ -431,7 +431,8 @@ def create_reservation():
     data = request.get_json(silent=True) or {}
     name = (data.get('name') or '').strip()
     email = (data.get('email') or '').strip().lower()
-    phone = (data.get('phone') or '').strip() or None
+    phone = (data.get('phone') or '').strip()
+    phone_digits = re.sub(r'\D', '', phone)
     guests = data.get('guests')
     time_slot_str = data.get('time_slot') or ''
 
@@ -513,6 +514,44 @@ def create_reservation():
     except Exception as e:
         app.logger.error(f'Reservation error: {e}')
         return jsonify(error='An unexpected error occurred. Please try again.'), 500
+
+
+@app.post('/api/reservations/lookup')
+def lookup_reservations():
+    """Return reservation status only when both guest identifiers match."""
+    data = request.get_json(silent=True) or {}
+    email = (data.get('email') or '').strip().lower()
+    phone_digits = re.sub(r'\D', '', (data.get('phone') or ''))
+
+    if not email or not EMAIL_RE.match(email):
+        return jsonify(error='Please provide a valid email address.'), 400
+    if not 7 <= len(phone_digits) <= 15:
+        return jsonify(error='Please provide a valid phone number.'), 400
+
+    try:
+        with get_conn() as conn:
+            rows = conn.execute(
+                '''SELECT r.id, r.time_slot, r.guest_count, r.status
+                   FROM reservations r
+                   JOIN customers c ON c.id = r.customer_id
+                   WHERE LOWER(c.email_address) = %s
+                     AND regexp_replace(COALESCE(c.phone_number, ''), '[^0-9]', '', 'g') = %s
+                   ORDER BY r.time_slot DESC
+                   LIMIT 10''',
+                (email, phone_digits)
+            ).fetchall()
+        return jsonify([
+            {
+                'id': row['id'],
+                'time_slot': row['time_slot'].isoformat(),
+                'guests': row['guest_count'],
+                'status': row['status'],
+            }
+            for row in rows
+        ]), 200
+    except Exception as e:
+        app.logger.error(f'Reservation lookup error: {e}')
+        return jsonify(error='Unable to look up reservation requests.'), 500
 
 
 @app.post('/api/newsletter')
@@ -710,6 +749,8 @@ def admin_remove_newsletter_subscriber():
     email = (data.get('email') or '').strip().lower()
     if not email or not EMAIL_RE.match(email):
         return jsonify(error='A valid email address is required.'), 400
+    if not 7 <= len(phone_digits) <= 15:
+        return jsonify(error='A valid phone number is required.'), 400
 
     try:
         with get_conn() as conn:
