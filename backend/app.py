@@ -606,6 +606,34 @@ def admin_list_newsletter_subscribers():
         return jsonify(error='Failed to fetch newsletter subscribers.'), 500
 
 
+@app.delete('/api/admin/newsletter-subscribers')
+def admin_remove_newsletter_subscriber():
+    denied = check_admin(request)
+    if denied:
+        return denied
+
+    data = request.get_json(silent=True) or {}
+    email = (data.get('email') or '').strip().lower()
+    if not email or not EMAIL_RE.match(email):
+        return jsonify(error='A valid email address is required.'), 400
+
+    try:
+        with get_conn() as conn:
+            row = conn.execute('''
+                UPDATE customers
+                SET newsletter_signup = FALSE
+                WHERE LOWER(email_address) = %s AND newsletter_signup = TRUE
+                RETURNING email_address
+            ''', (email,)).fetchone()
+            conn.commit()
+        if not row:
+            return jsonify(error='Newsletter subscriber not found.'), 404
+        return jsonify(message='Subscriber removed from the newsletter.', email=row['email_address']), 200
+    except Exception as e:
+        app.logger.error(f'Newsletter subscriber removal error: {e}')
+        return jsonify(error='Failed to remove newsletter subscriber.'), 500
+
+
 @app.get('/api/admin/reservations')
 def admin_list_reservations():
     denied = check_admin(request)

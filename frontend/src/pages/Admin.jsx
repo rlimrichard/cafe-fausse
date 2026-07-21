@@ -681,6 +681,7 @@ function ReservationCalendar({ reservations }) {
 function NewsletterSubscribers({ password, showToast }) {
   const [subscribers, setSubscribers] = useState([])
   const [loading, setLoading] = useState(true)
+  const [removingEmail, setRemovingEmail] = useState(null)
 
   const loadSubscribers = useCallback(async () => {
     setLoading(true)
@@ -700,6 +701,29 @@ function NewsletterSubscribers({ password, showToast }) {
 
   useEffect(() => { loadSubscribers() }, [loadSubscribers])
 
+  async function removeSubscriber(email) {
+    if (!window.confirm(`Remove ${email} from the newsletter?`)) return
+    setRemovingEmail(email)
+    try {
+      const res = await fetch('/api/admin/newsletter-subscribers', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json', 'X-Admin-Password': password },
+        body: JSON.stringify({ email }),
+      })
+      const data = await res.json()
+      if (res.ok) {
+        setSubscribers(current => current.filter(subscriber => subscriber.email !== email))
+        showToast(data.message)
+      } else {
+        showToast(data.error || 'Failed to remove subscriber.', 'error')
+      }
+    } catch {
+      showToast('Failed to remove subscriber.', 'error')
+    } finally {
+      setRemovingEmail(null)
+    }
+  }
+
   return (
     <section className="subscribers-panel">
       <div className="subscribers-panel-header">
@@ -716,12 +740,23 @@ function NewsletterSubscribers({ password, showToast }) {
       ) : (
         <div className="admin-table-wrap">
           <table className="admin-table subscribers-table">
-            <thead><tr><th>Email address</th><th>Recorded</th></tr></thead>
+            <thead><tr><th>Email address</th><th>Recorded</th><th aria-label="Actions" /></tr></thead>
             <tbody>
               {subscribers.map(subscriber => (
                 <tr key={subscriber.email}>
                   <td>{subscriber.email}</td>
                   <td>{formatDate(subscriber.created_at)}</td>
+                  <td className="subscriber-actions">
+                    <button
+                      className="subscriber-remove"
+                      onClick={() => removeSubscriber(subscriber.email)}
+                      disabled={removingEmail === subscriber.email}
+                      aria-label={`Remove ${subscriber.email} from newsletter`}
+                      title="Remove from newsletter"
+                    >
+                      ×
+                    </button>
+                  </td>
                 </tr>
               ))}
             </tbody>
