@@ -214,6 +214,27 @@
   background: #151515;
 }
 
+.subscribers-panel {
+  margin-top: 2rem;
+  border: 1px solid #2a2a2a;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #151515;
+}
+
+.subscribers-panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.1rem 1.25rem;
+  border-bottom: 1px solid #2a2a2a;
+}
+
+.subscribers-panel-header h2 { margin: 0 0 0.25rem; color: #fff; font-size: 1.2rem; }
+.subscribers-panel-header p { margin: 0; color: #888; font-size: 0.85rem; }
+.subscribers-table td:first-child { color: #f0f0f0; }
+
 .menu-manager-heading {
   display: flex;
   justify-content: space-between;

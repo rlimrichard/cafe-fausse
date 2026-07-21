@@ -30,6 +30,7 @@ export default function Admin() {
   const [dbData, setDbData] = useState({})
   const [dbLoading, setDbLoading] = useState(false)
   const menuOpen = activeView === 'menu'
+  const subscribersOpen = activeView === 'subscribers'
   const dbOpen = activeView === 'database'
   const logsOpen = activeView === 'logs'
 
@@ -264,6 +265,12 @@ export default function Admin() {
             Menu
           </button>
           <button
+            className={`admin-logs-toggle${subscribersOpen ? ' active' : ''}`}
+            onClick={() => setActiveView('subscribers')}
+          >
+            Subscribers
+          </button>
+          <button
             className={`admin-logs-toggle${dbOpen ? ' active' : ''}`}
             onClick={() => setActiveView('database')}
           >
@@ -422,6 +429,8 @@ export default function Admin() {
       {/* ── DB panel ── */}
       {menuOpen && <MenuManager password={password} showToast={showToast} />}
 
+      {subscribersOpen && <NewsletterSubscribers password={password} showToast={showToast} />}
+
       {dbOpen && (
         <div className="db-panel">
           <div className="db-panel-header">
@@ -511,6 +520,60 @@ export default function Admin() {
         </div>
       )}
     </div>
+  )
+}
+
+function NewsletterSubscribers({ password, showToast }) {
+  const [subscribers, setSubscribers] = useState([])
+  const [loading, setLoading] = useState(true)
+
+  const loadSubscribers = useCallback(async () => {
+    setLoading(true)
+    try {
+      const res = await fetch('/api/admin/newsletter-subscribers', {
+        headers: { 'X-Admin-Password': password },
+      })
+      const data = await res.json()
+      if (res.ok) setSubscribers(Array.isArray(data) ? data : [])
+      else showToast(data.error || 'Failed to load subscribers.', 'error')
+    } catch {
+      showToast('Failed to load subscribers.', 'error')
+    } finally {
+      setLoading(false)
+    }
+  }, [password, showToast])
+
+  useEffect(() => { loadSubscribers() }, [loadSubscribers])
+
+  return (
+    <section className="subscribers-panel">
+      <div className="subscribers-panel-header">
+        <div>
+          <h2>Newsletter Subscribers</h2>
+          <p>{subscribers.length} opted-in email{subscribers.length === 1 ? '' : 's'}</p>
+        </div>
+        <button className="log-btn" onClick={loadSubscribers} disabled={loading}>Refresh</button>
+      </div>
+      {loading ? (
+        <div className="admin-empty">Loading subscribers…</div>
+      ) : subscribers.length === 0 ? (
+        <div className="admin-empty">No newsletter subscribers yet.</div>
+      ) : (
+        <div className="admin-table-wrap">
+          <table className="admin-table subscribers-table">
+            <thead><tr><th>Email address</th><th>Recorded</th></tr></thead>
+            <tbody>
+              {subscribers.map(subscriber => (
+                <tr key={subscriber.email}>
+                  <td>{subscriber.email}</td>
+                  <td>{formatDate(subscriber.created_at)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </section>
   )
 }
 

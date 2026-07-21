@@ -16,7 +16,7 @@ export default function Footer() {
       })
       const data = await res.json()
       if (res.ok) {
-        setStatus('success')
+        setStatus(data.already_subscribed ? 'already-subscribed' : 'success')
         setEmail('')
       } else {
         setStatus(data.error || 'error')
@@ -55,6 +55,7 @@ export default function Footer() {
             </button>
           </form>
           {status === 'success' && <p className="form-success">Thanks for subscribing!</p>}
+          {status === 'already-subscribed' && <p className="form-success">This email is already subscribed to the newsletter.</p>}
           {status === 'error' && <p className="form-error">Something went wrong. Please try again.</p>}
           {status && status !== 'success' && status !== 'error' && status !== 'loading' && (
             <p className="form-error">{status}</p>

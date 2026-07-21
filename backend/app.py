@@ -324,7 +324,7 @@ ensure_menu_table()
 def create_reservation():
     data = request.get_json(silent=True) or {}
     name = (data.get('name') or '').strip()
-    email = (data.get('email') or '').strip()
+    email = (data.get('email') or '').strip().lower()
     phone = (data.get('phone') or '').strip() or None
     guests = data.get('guests')
     time_slot_str = data.get('time_slot') or ''
@@ -399,11 +399,19 @@ def newsletter_signup():
 
     try:
         with get_conn() as conn:
-            conn.execute(
-                '''INSERT INTO customers (customer_name, email_address, newsletter_signup) VALUES (%s, %s, %s)
-                   ON CONFLICT (email_address) DO UPDATE SET newsletter_signup = TRUE''',
-                ('Newsletter Subscriber', email, True)
-            )
+            existing = conn.execute(
+                'SELECT id, newsletter_signup FROM customers WHERE LOWER(email_address) = %s',
+                (email,)
+            ).fetchone()
+            if existing and existing['newsletter_signup']:
+                return jsonify(message='This email is already subscribed to the newsletter.', already_subscribed=True), 200
+            if existing:
+                conn.execute('UPDATE customers SET newsletter_signup = TRUE WHERE id = %s', (existing['id'],))
+            else:
+                conn.execute(
+                    'INSERT INTO customers (customer_name, email_address, newsletter_signup) VALUES (%s, %s, %s)',
+                    ('Newsletter Subscriber', email, True)
+                )
             conn.commit()
         return jsonify(message='Successfully subscribed!'), 201
     except Exception as e:
@@ -530,6 +538,29 @@ def admin_delete_menu_item(item_id):
 
 
 # ── Admin endpoints ───────────────────────────────────────────────────────────
+
+@app.get('/api/admin/newsletter-subscribers')
+def admin_list_newsletter_subscribers():
+    denied = check_admin(request)
+    if denied:
+        return denied
+
+    try:
+        with get_conn() as conn:
+            rows = conn.execute('''
+                SELECT email_address, created_at
+                FROM customers
+                WHERE newsletter_signup = TRUE
+                ORDER BY created_at DESC, email_address ASC
+            ''').fetchall()
+        return jsonify([
+            {'email': row['email_address'], 'created_at': row['created_at'].isoformat()}
+            for row in rows
+        ]), 200
+    except Exception as e:
+        app.logger.error(f'Newsletter subscriber list error: {e}')
+        return jsonify(error='Failed to fetch newsletter subscribers.'), 500
+
 
 @app.get('/api/admin/reservations')
 def admin_list_reservations():
