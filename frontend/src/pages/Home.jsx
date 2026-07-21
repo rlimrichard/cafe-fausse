@@ -6,8 +6,8 @@ export default function Home() {
     <div className="home">
       <section className="hero">
         <div className="hero-overlay">
-          <h1>Café Fausse</h1>
-          <p>Traditional German flavors meet modern culinary innovation</p>
+          <h1>Trattoria Bellavista</h1>
+          <p>Traditional Italian flavors meet modern culinary innovation</p>
           <div className="hero-actions">
             <Link to="/reservations" className="btn btn-primary">Reserve a Table</Link>
             <Link to="/menu" className="btn btn-outline">View Menu</Link>
@@ -21,8 +21,8 @@ export default function Home() {
           <h2 className="section-title">An Unforgettable Dining Experience</h2>
           <div className="divider" />
           <p className="welcome-text">
-            Founded in 2010 by Chef Lukas Weber and restaurateur Anna Müller, Café Fausse has become
-            Washington DC's premier destination for refined German-inspired dining. Every dish is crafted from
+            Founded in 2010 by Chef Antonio Rossi and restaurateur Maria Lopez, Trattoria Bellavista has become
+            Washington DC's premier destination for refined Italian dining. Every dish is crafted from
             locally sourced ingredients, delivering quality and creativity on every plate.
           </p>
           <Link to="/about" className="btn btn-outline" style={{ marginTop: '2rem' }}>Our Story</Link>

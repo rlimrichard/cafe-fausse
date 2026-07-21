@@ -30,7 +30,7 @@ export default function Footer() {
     <footer className="footer">
       <div className="footer-inner container">
         <div className="footer-col">
-          <h3>Café Fausse</h3>
+          <h3>Trattoria Bellavista</h3>
           <p>1234 Culinary Ave, Suite 100<br />Washington, DC 20002</p>
           <p>(202) 555-4567</p>
         </div>
@@ -62,7 +62,7 @@ export default function Footer() {
           )}
         </div>
       </div>
-      <p className="footer-copy">&copy; {new Date().getFullYear()} Café Fausse. All rights reserved.</p>
+      <p className="footer-copy">&copy; {new Date().getFullYear()} Trattoria Bellavista. All rights reserved.</p>
     </footer>
   )
 }
