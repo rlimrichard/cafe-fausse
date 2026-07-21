@@ -728,7 +728,7 @@ def admin_db_table(table_name):
     if denied:
         return denied
 
-    ALLOWED = {'customers', 'reservations'}
+    ALLOWED = {'customers', 'reservations', 'menu_items'}
     if table_name not in ALLOWED:
         return jsonify(error=f"Unknown table '{table_name}'."), 404
 
