@@ -565,25 +565,21 @@ def newsletter_signup():
     try:
         with get_conn() as conn:
             existing = conn.execute(
-                'SELECT id, newsletter_signup, newsletter_confirmed_at FROM customers WHERE LOWER(email_address) = %s',
+                'SELECT id, newsletter_signup FROM customers WHERE LOWER(email_address) = %s',
                 (email,)
             ).fetchone()
             already_subscribed = bool(existing and existing['newsletter_signup'])
-            if existing and not existing['newsletter_signup']:
+            if already_subscribed:
+                return jsonify(message='This email is already subscribed to the newsletter.', already_subscribed=True), 200
+            if existing:
                 conn.execute('UPDATE customers SET newsletter_signup = TRUE WHERE id = %s', (existing['id'],))
-            elif not existing:
+            else:
                 conn.execute(
                     'INSERT INTO customers (customer_name, email_address, newsletter_signup) VALUES (%s, %s, %s)',
                     ('Newsletter Subscriber', email, True)
                 )
             conn.commit()
-        needs_confirmation = not existing or not existing['newsletter_confirmed_at']
-        if needs_confirmation and email_newsletter_welcome(email):
-            with get_conn() as conn:
-                conn.execute('UPDATE customers SET newsletter_confirmed_at = NOW() WHERE LOWER(email_address) = %s', (email,))
-                conn.commit()
-        if already_subscribed and not needs_confirmation:
-            return jsonify(message='This email is already subscribed to the newsletter.', already_subscribed=True), 200
+        email_newsletter_welcome(email)
         return jsonify(message='Successfully subscribed!'), 201
     except Exception as e:
         app.logger.error(f'Newsletter error: {e}')
