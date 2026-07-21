@@ -4,6 +4,7 @@ CREATE TABLE IF NOT EXISTS customers (
     email_address     VARCHAR(255) NOT NULL UNIQUE,
     phone_number      VARCHAR(30),
     newsletter_signup BOOLEAN NOT NULL DEFAULT FALSE,
+    newsletter_confirmed_at TIMESTAMP,
     created_at        TIMESTAMP NOT NULL DEFAULT NOW()
 );
 
