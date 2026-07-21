@@ -12,8 +12,8 @@ const IMAGES = [
   { id: 4, src: ribeyeSteakImage, alt: 'Café Fausse ribeye steak', category: 'Dishes' },
   { id: 5, src: 'https://images.unsplash.com/photo-1571877227200-a0d98ea607e9?w=800&q=80', alt: 'Tiramisu dessert', category: 'Dishes' },
   { id: 6, src: specialEventImage, alt: 'Café Fausse special event dinner', category: 'Events' },
-  { id: 7, src: 'https://images.unsplash.com/photo-1424847651672-bf20a4b0982b?w=800&q=80', alt: 'Kitchen behind the scenes', category: 'Behind the Scenes' },
   { id: 8, src: 'https://images.unsplash.com/photo-1490645935967-10de6ba17061?w=800&q=80', alt: 'Bruschetta starter', category: 'Dishes' },
+  { id: 7, src: 'https://images.unsplash.com/photo-1424847651672-bf20a4b0982b?w=800&q=80', alt: 'Kitchen behind the scenes', category: 'Behind the Scenes' },
 ]
 
 const AWARDS = [
