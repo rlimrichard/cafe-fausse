@@ -50,6 +50,10 @@ const FALLBACK_IMAGES = Object.fromEntries(
   FALLBACK_MENU.flatMap(({ items }) => items.map(item => [item.name, item.image]))
 )
 
+function formatMenuPrice(price) {
+  return Number(price).toFixed(2).replace(/\.?0+$/, '')
+}
+
 function groupMenuItems(items) {
   const preferredOrder = FALLBACK_MENU.map(group => group.category)
   const grouped = items.reduce((groups, item) => {
@@ -99,7 +103,7 @@ export default function Menu() {
                     <h3>{item.name}</h3>
                     <p>{item.description}</p>
                   </div>
-                  <span className="menu-item-price">${item.price.toFixed(2)}</span>
+                  <span className="menu-item-price">{formatMenuPrice(item.price)}</span>
                 </div>
               ))}
             </div>
