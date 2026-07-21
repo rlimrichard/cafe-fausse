@@ -39,12 +39,11 @@ export default function Admin() {
     setTimeout(() => setToast(null), 3000)
   }
 
-  const fetchReservations = useCallback(async (pwd, f) => {
+  const fetchReservations = useCallback(async (pwd) => {
     setLoading(true)
     setSelected(new Set())
     try {
-      const qs = f !== 'all' ? `?status=${f}` : ''
-      const res = await fetch(`/api/admin/reservations${qs}`, {
+      const res = await fetch('/api/admin/reservations', {
         headers: { 'X-Admin-Password': pwd },
       })
       if (res.status === 401) { setAuthed(false); setAuthError('Incorrect password.'); return }
@@ -74,8 +73,8 @@ export default function Admin() {
   }, [])
 
   useEffect(() => {
-    if (authed) fetchReservations(password, filter)
-  }, [authed, filter, fetchReservations, password])
+    if (authed) fetchReservations(password)
+  }, [authed, fetchReservations, password])
 
   const fetchDbTable = useCallback(async (pwd, table) => {
     setDbLoading(true)
@@ -156,7 +155,7 @@ export default function Admin() {
     e.preventDefault()
     setAuthError('')
     setLoading(true)
-    const res = await fetch('/api/admin/reservations?status=pending', {
+    const res = await fetch('/api/admin/reservations', {
       headers: { 'X-Admin-Password': password },
     })
     setLoading(false)
@@ -302,7 +301,7 @@ export default function Admin() {
         ))}
         <button
           className="admin-refresh"
-          onClick={() => fetchReservations(password, filter)}
+          onClick={() => fetchReservations(password)}
           disabled={loading}
         >
           ↻ Refresh
