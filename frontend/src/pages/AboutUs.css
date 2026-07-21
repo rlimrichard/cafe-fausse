@@ -1,0 +1,101 @@
+.about-page {
+  background: #fff;
+}
+
+.about-intro {
+  max-width: 760px;
+  margin-bottom: 4rem;
+}
+
+.about-intro p {
+  font-size: 1.05rem;
+  line-height: 1.9;
+  color: var(--text-muted);
+  margin-bottom: 1rem;
+}
+
+.founders h2,
+.commitment h2 {
+  font-size: 1.8rem;
+  color: var(--dark);
+  margin-bottom: 2rem;
+}
+
+.founders {
+  margin-bottom: 4rem;
+}
+
+.founders-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 2rem;
+}
+
+.founder-card {
+  background: var(--cream);
+  padding: 2rem;
+  border-top: 3px solid var(--gold);
+}
+
+.founder-avatar {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: var(--gold);
+  color: #fff;
+  font-family: var(--font-serif);
+  font-size: 1.3rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 1rem;
+}
+
+.founder-card h3 {
+  font-size: 1.3rem;
+  margin-bottom: 0.25rem;
+}
+
+.founder-title {
+  color: var(--gold);
+  font-size: 0.85rem;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  margin-bottom: 0.75rem;
+}
+
+.founder-card p:last-child {
+  color: var(--text-muted);
+  font-size: 0.95rem;
+  line-height: 1.8;
+}
+
+.commitment-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.5rem;
+}
+
+.commitment-item {
+  padding: 1.5rem;
+  border: 1px solid #e0e0e0;
+}
+
+.commitment-item h4 {
+  font-size: 1.1rem;
+  color: var(--gold);
+  margin-bottom: 0.5rem;
+}
+
+.commitment-item p {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  line-height: 1.7;
+}
+
+@media (max-width: 768px) {
+  .founders-grid,
+  .commitment-grid {
+    grid-template-columns: 1fr;
+  }
+}

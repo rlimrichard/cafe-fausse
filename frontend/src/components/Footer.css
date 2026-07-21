@@ -1,0 +1,92 @@
+.footer {
+  background: var(--dark);
+  color: #ccc;
+  padding: 3rem 0 1rem;
+}
+
+.footer-inner {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2rem;
+  padding-bottom: 2rem;
+  border-bottom: 1px solid #333;
+}
+
+.footer-col h3 {
+  font-family: var(--font-serif);
+  color: var(--gold);
+  font-size: 1.4rem;
+  margin-bottom: 0.75rem;
+}
+
+.footer-col h4 {
+  font-family: var(--font-serif);
+  color: var(--gold);
+  font-size: 1rem;
+  margin-bottom: 0.75rem;
+}
+
+.footer-col p {
+  font-size: 0.9rem;
+  line-height: 1.8;
+}
+
+.newsletter-form {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+}
+
+.newsletter-form input {
+  flex: 1;
+  padding: 0.6rem 0.9rem;
+  border: 1px solid #444;
+  background: #2a2a2a;
+  color: #fff;
+  font-family: var(--font-sans);
+  font-size: 0.85rem;
+}
+
+.newsletter-form input::placeholder {
+  color: #888;
+}
+
+.newsletter-form button {
+  padding: 0.6rem 1rem;
+  background: var(--gold);
+  border: none;
+  color: #fff;
+  cursor: pointer;
+  font-size: 0.85rem;
+  letter-spacing: 1px;
+  white-space: nowrap;
+}
+
+.newsletter-form button:hover {
+  background: #9a7d22;
+}
+
+.form-success {
+  color: #6dbf6d;
+  font-size: 0.85rem;
+  margin-top: 0.5rem;
+}
+
+.form-error {
+  color: #e07070;
+  font-size: 0.85rem;
+  margin-top: 0.5rem;
+}
+
+.footer-copy {
+  text-align: center;
+  padding-top: 1.5rem;
+  font-size: 0.8rem;
+  color: #666;
+}
+
+@media (max-width: 768px) {
+  .footer-inner {
+    grid-template-columns: 1fr;
+  }
+}

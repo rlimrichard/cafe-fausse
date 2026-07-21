@@ -1,0 +1,154 @@
+.reservations-page {
+  background: var(--cream);
+}
+
+.reservations-layout {
+  display: grid;
+  grid-template-columns: 1fr 300px;
+  gap: 3rem;
+  align-items: start;
+}
+
+.reservation-form {
+  background: #fff;
+  padding: 2.5rem;
+  border: 1px solid #e8e0d0;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  margin-bottom: 1.25rem;
+}
+
+.form-group label {
+  font-size: 0.85rem;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.optional {
+  text-transform: none;
+  letter-spacing: 0;
+  font-size: 0.8rem;
+}
+
+.form-group input,
+.form-group select {
+  padding: 0.75rem 1rem;
+  border: 1px solid #d0c8b8;
+  background: #fdfaf5;
+  font-family: var(--font-sans);
+  font-size: 0.95rem;
+  color: var(--text);
+  transition: border-color 0.2s;
+}
+
+.form-group input:focus,
+.form-group select:focus {
+  outline: none;
+  border-color: var(--gold);
+}
+
+.field-error {
+  color: #c0392b;
+  font-size: 0.8rem;
+}
+
+.submit-btn {
+  width: 100%;
+  padding: 1rem;
+  font-size: 0.95rem;
+  margin-top: 0.5rem;
+}
+
+.submit-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.booking-success {
+  margin-top: 1.5rem;
+  padding: 1.25rem 1.5rem;
+  background: #eaf6ea;
+  border-left: 4px solid #4caf50;
+}
+
+.booking-success h3 {
+  color: #2e7d32;
+  margin-bottom: 0.5rem;
+  font-size: 1.1rem;
+}
+
+.booking-success p {
+  color: #1b5e20;
+  font-size: 0.9rem;
+  line-height: 1.6;
+}
+
+.booking-error {
+  margin-top: 1.5rem;
+  padding: 1.25rem 1.5rem;
+  background: #fdecea;
+  border-left: 4px solid #e53935;
+}
+
+.booking-error p {
+  color: #b71c1c;
+  font-size: 0.9rem;
+}
+
+.reservations-info {
+  background: var(--dark);
+  color: #ccc;
+  padding: 2rem;
+}
+
+.reservations-info h3 {
+  color: var(--gold);
+  font-size: 1rem;
+  margin-bottom: 0.75rem;
+  margin-top: 1.25rem;
+}
+
+.reservations-info h3:first-child {
+  margin-top: 0;
+}
+
+.reservations-info dl {
+  font-size: 0.9rem;
+  line-height: 1.8;
+}
+
+.reservations-info dt {
+  color: #fff;
+  font-weight: 700;
+}
+
+.reservations-info dd {
+  margin-left: 0;
+  color: #aaa;
+  margin-bottom: 0.5rem;
+}
+
+.reservations-info p {
+  font-size: 0.9rem;
+  line-height: 1.7;
+}
+
+@media (max-width: 768px) {
+  .reservations-layout {
+    grid-template-columns: 1fr;
+  }
+  .form-row {
+    grid-template-columns: 1fr;
+  }
+}
