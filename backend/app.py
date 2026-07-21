@@ -335,6 +335,30 @@ def email_denied(name, to, time_slot, guests):
     send_email(to, subject, html)
 
 
+def email_newsletter_welcome(to):
+    subject = 'Thanks for subscribing to the Café Fausse newsletter'
+    html = '''
+    <div style="font-family:Georgia,serif;max-width:560px;margin:0 auto;color:#1a1a1a">
+      <div style="background:#1a1a1a;padding:24px 32px">
+        <h1 style="color:#b8972a;margin:0;font-size:1.4rem;letter-spacing:0.05em">CAFÉ FAUSSE</h1>
+      </div>
+      <div style="padding:32px">
+        <h2 style="margin-top:0">Thanks for subscribing</h2>
+        <p>We are delighted to have you at our table.</p>
+        <p>We will send you updates including amazing new chef specials and seasonal fare.</p>
+        <p>Until then, we look forward to welcoming you to Café Fausse.</p>
+        <p style="color:#888;font-size:0.875rem">1234 Culinary Ave, Suite 100 · Washington, DC 20002<br>
+           Mon–Sat 5–11 PM · Sun 5–9 PM</p>
+        <p>Warm regards,<br><strong>The Café Fausse Team</strong></p>
+      </div>
+      <div style="background:#f0ebe0;padding:16px 32px;font-size:0.75rem;color:#888;text-align:center">
+        © Café Fausse · 1234 Culinary Ave, Washington, DC
+      </div>
+    </div>
+    '''
+    send_email(to, subject, html)
+
+
 ensure_menu_table()
 ensure_visitor_table()
 
@@ -457,6 +481,7 @@ def newsletter_signup():
                     ('Newsletter Subscriber', email, True)
                 )
             conn.commit()
+        email_newsletter_welcome(email)
         return jsonify(message='Successfully subscribed!'), 201
     except Exception as e:
         app.logger.error(f'Newsletter error: {e}')
