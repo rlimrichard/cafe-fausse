@@ -31,6 +31,15 @@
   line-height: 1.8;
 }
 
+.footer-col a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.footer-col a:hover {
+  color: var(--gold);
+}
+
 .newsletter-form {
   display: flex;
   gap: 0.5rem;

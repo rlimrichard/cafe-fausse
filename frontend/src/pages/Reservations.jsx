@@ -143,6 +143,9 @@ export default function Reservations() {
               <input id="phone" type="tel" placeholder="(202) 555-0000" value={form.phone} onChange={set('phone')} />
             </div>
 
+            <p className="reservation-expectations">
+              You&apos;ll receive an email receipt right away. Reservations are confirmed after our team reviews the request; for changes or cancellations, please call at least 24 hours in advance.
+            </p>
             <button type="submit" className="btn btn-primary submit-btn" disabled={status === 'loading'}>
               {status === 'loading' ? 'Booking...' : 'Confirm Reservation'}
             </button>
@@ -168,8 +171,16 @@ export default function Reservations() {
               <dt>Sunday</dt><dd>5:00 PM – 9:00 PM</dd>
             </dl>
             <h3>Contact</h3>
-            <p>(202) 555-4567</p>
-            <p>1234 Culinary Ave, Suite 100<br />Washington, DC 20002</p>
+            <p><a href="tel:+12025554567">(202) 555-4567</a></p>
+            <p><a href="https://www.google.com/maps/search/?api=1&query=1234+Culinary+Ave%2C+Washington%2C+DC+20002" target="_blank" rel="noreferrer">1234 Culinary Ave, Suite 100<br />Washington, DC 20002</a></p>
+            <a className="directions-link" href="https://www.google.com/maps/dir/?api=1&destination=1234+Culinary+Ave%2C+Washington%2C+DC+20002" target="_blank" rel="noreferrer">Get directions ↗</a>
+            <iframe
+              className="reservation-map"
+              title="Map to Cafe Fausse"
+              src="https://www.google.com/maps?q=1234+Culinary+Ave%2C+Washington%2C+DC+20002&output=embed"
+              loading="lazy"
+              referrerPolicy="no-referrer-when-downgrade"
+            />
           </aside>
         </div>
       </div>

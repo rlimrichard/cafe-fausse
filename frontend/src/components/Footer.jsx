@@ -31,8 +31,9 @@ export default function Footer() {
       <div className="footer-inner container">
         <div className="footer-col">
           <h3>Café Fausse</h3>
-          <p>1234 Culinary Ave, Suite 100<br />Washington, DC 20002</p>
-          <p>(202) 555-4567</p>
+          <p><a href="https://www.google.com/maps/search/?api=1&query=1234+Culinary+Ave%2C+Washington%2C+DC+20002" target="_blank" rel="noreferrer">1234 Culinary Ave, Suite 100<br />Washington, DC 20002</a></p>
+          <p><a href="tel:+12025554567">(202) 555-4567</a></p>
+          <p><a href="mailto:faussecafe@gmail.com">faussecafe@gmail.com</a></p>
         </div>
         <div className="footer-col">
           <h4>Hours</h4>

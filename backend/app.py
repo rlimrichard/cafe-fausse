@@ -558,7 +558,13 @@ def list_menu_items():
             rows = conn.execute('''
                 SELECT id, category, item_name, description, price, image_url, display_order
                 FROM menu_items
-                ORDER BY category, display_order, item_name
+                ORDER BY CASE category
+                    WHEN 'Starters' THEN 1
+                    WHEN 'Main Courses' THEN 2
+                    WHEN 'Desserts' THEN 3
+                    WHEN 'Beverages' THEN 4
+                    ELSE 99
+                END, category, display_order, item_name
             ''').fetchall()
         return jsonify([serialize_menu_item(row) for row in rows]), 200
     except Exception as e:

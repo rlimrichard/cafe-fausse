@@ -6,6 +6,14 @@
   margin-bottom: 3rem;
 }
 
+.menu-price-note {
+  margin: -0.5rem 0 2.5rem;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  font-style: italic;
+  text-align: center;
+}
+
 .category-title {
   font-size: 1.6rem;
   color: var(--dark);
