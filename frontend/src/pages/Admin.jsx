@@ -17,19 +17,20 @@ export default function Admin() {
   const [toast, setToast] = useState(null)
   const [selected, setSelected] = useState(new Set())
   const [bulkLoading, setBulkLoading] = useState(false)
+  const [activeView, setActiveView] = useState('reservations')
 
   const [logs, setLogs] = useState([])
-  const [logsOpen, setLogsOpen] = useState(false)
   const [logsPaused, setLogsPaused] = useState(false)
   const lastTsRef = useRef(null)
   const logEndRef = useRef(null)
   const pollRef = useRef(null)
 
-  const [dbOpen, setDbOpen] = useState(false)
   const [dbTab, setDbTab] = useState('customers')
   const [dbData, setDbData] = useState({})
   const [dbLoading, setDbLoading] = useState(false)
-  const [menuOpen, setMenuOpen] = useState(false)
+  const menuOpen = activeView === 'menu'
+  const dbOpen = activeView === 'database'
+  const logsOpen = activeView === 'logs'
 
   const showToast = (msg, type = 'success') => {
     setToast({ msg, type })
@@ -245,27 +246,33 @@ export default function Admin() {
 
       <div className="admin-header">
         <div>
-          <h1>Reservations</h1>
-          <p className="admin-header-sub">Manage incoming reservation requests</p>
+          <h1>Restaurant Admin</h1>
+          <p className="admin-header-sub">Manage reservations, menu content, database records, and server activity</p>
         </div>
         <div className="admin-header-actions">
           <button
-            className={`admin-logs-toggle${menuOpen ? ' active' : ''}`}
-            onClick={() => setMenuOpen(open => !open)}
+            className={`admin-logs-toggle${activeView === 'reservations' ? ' active' : ''}`}
+            onClick={() => setActiveView('reservations')}
           >
-            {menuOpen ? 'Hide Menu' : 'Manage Menu'}
+            Reservations
+          </button>
+          <button
+            className={`admin-logs-toggle${menuOpen ? ' active' : ''}`}
+            onClick={() => setActiveView('menu')}
+          >
+            Menu
           </button>
           <button
             className={`admin-logs-toggle${dbOpen ? ' active' : ''}`}
-            onClick={() => setDbOpen(o => !o)}
+            onClick={() => setActiveView('database')}
           >
-            {dbOpen ? 'Hide DB' : 'Show DB'}
+            Database
           </button>
           <button
             className={`admin-logs-toggle${logsOpen ? ' active' : ''}`}
-            onClick={() => setLogsOpen(o => !o)}
+            onClick={() => setActiveView('logs')}
           >
-            {logsOpen ? 'Hide Logs' : 'Show Logs'}
+            Logs
           </button>
           <button className="admin-logout" onClick={() => { setAuthed(false); setPassword('') }}>
             Sign Out
@@ -273,6 +280,7 @@ export default function Admin() {
         </div>
       </div>
 
+      {activeView === 'reservations' && <>
       <div className="admin-filters">
         {FILTERS.map(f => (
           <button
@@ -407,6 +415,8 @@ export default function Admin() {
           </table>
         </div>
       )}
+
+      </>}
 
       {/* ── DB panel ── */}
       {menuOpen && <MenuManager password={password} showToast={showToast} />}
