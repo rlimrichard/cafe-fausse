@@ -89,7 +89,6 @@ export default function Menu() {
         <p className="section-subtitle">Our Menu</p>
         <h1 className="section-title">Curated with Care</h1>
         <div className="divider" />
-        <p className="menu-price-note">All menu prices are in USD.</p>
 
         {menu.map(({ category, items }) => (
           <section key={category} className="menu-category">
@@ -110,6 +109,7 @@ export default function Menu() {
             </div>
           </section>
         ))}
+        <p className="menu-price-note">All menu prices are in USD.</p>
       </div>
     </div>
   )
