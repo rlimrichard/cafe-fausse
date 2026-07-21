@@ -8,10 +8,10 @@ import diningRoomImage from '../../../MSEE_Web_Application_and_Interface_Design_
 const IMAGES = [
   { id: 1, src: cafeInteriorImage, alt: 'Café Fausse restaurant interior', category: 'Interior' },
   { id: 2, src: diningRoomImage, alt: 'Café Fausse elegant dining room', category: 'Interior' },
+  { id: 6, src: specialEventImage, alt: 'Café Fausse special event dinner', category: 'Events' },
   { id: 3, src: 'https://images.unsplash.com/photo-1467003909585-2f8a72700288?w=800&q=80', alt: 'Grilled salmon dish', category: 'Dishes' },
   { id: 4, src: ribeyeSteakImage, alt: 'Café Fausse ribeye steak', category: 'Dishes' },
   { id: 5, src: 'https://images.unsplash.com/photo-1571877227200-a0d98ea607e9?w=800&q=80', alt: 'Tiramisu dessert', category: 'Dishes' },
-  { id: 6, src: specialEventImage, alt: 'Café Fausse special event dinner', category: 'Events' },
   { id: 8, src: 'https://images.unsplash.com/photo-1490645935967-10de6ba17061?w=800&q=80', alt: 'Bruschetta starter', category: 'Dishes' },
   { id: 7, src: 'https://images.unsplash.com/photo-1424847651672-bf20a4b0982b?w=800&q=80', alt: 'Kitchen behind the scenes', category: 'Behind the Scenes' },
 ]
