@@ -48,6 +48,25 @@
   margin-bottom: 1rem;
 }
 
+.staff-photo {
+  margin: 0 0 4rem;
+}
+
+.staff-photo img {
+  width: 100%;
+  display: block;
+  aspect-ratio: 3 / 2;
+  object-fit: cover;
+  border-top: 3px solid var(--gold);
+}
+
+.staff-photo figcaption {
+  margin-top: 0.8rem;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  font-style: italic;
+}
+
 .founder-card h3 {
   font-size: 1.3rem;
   margin-bottom: 0.25rem;

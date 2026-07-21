@@ -1,6 +1,7 @@
 import './AboutUs.css'
 import antonioRossiPortrait from '../assets/founders/antonio-rossi.jpg'
 import mariaLopezPortrait from '../assets/founders/maria-lopez.jpg'
+import cafeFausseStaff from '../assets/about/cafe-fausse-staff.jpg'
 
 export default function AboutUs() {
   return (
@@ -22,6 +23,11 @@ export default function AboutUs() {
             exceptional food begins long before it reaches your plate.
           </p>
         </div>
+
+        <figure className="staff-photo">
+          <img src={cafeFausseStaff} alt="The Café Fausse culinary and hospitality team together in the dining room" />
+          <figcaption>The people who make every Café Fausse evening memorable.</figcaption>
+        </figure>
 
         <section className="founders">
           <h2>Meet the Founders</h2>
