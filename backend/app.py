@@ -51,17 +51,17 @@ MENU_UPLOAD_DIR = os.environ.get('MENU_UPLOAD_DIR', os.path.join(os.path.dirname
 MAX_MENU_IMAGE_BYTES = 5 * 1024 * 1024
 ALLOWED_MENU_IMAGE_EXTENSIONS = {'.jpg', '.jpeg', '.png', '.webp'}
 DEFAULT_MENU_IMAGES = {
-    'Bruschetta': 'bruschetta.png',
-    'Caesar Salad': 'caesar-salad.png',
-    'Grilled Salmon': 'grilled-salmon.png',
-    'Ribeye Steak': 'ribeye-steak.png',
-    'Vegetable Risotto': 'vegetable-risotto.png',
-    'Tiramisu': 'tiramisu.png',
-    'Cheesecake': 'cheesecake.png',
-    'Red Wine (Glass)': 'red-wine.png',
-    'White Wine (Glass)': 'white-wine.png',
-    'Craft Beer': 'craft-beer.png',
-    'Espresso': 'espresso.png',
+    'Bruschetta': 'bruschetta.jpg',
+    'Caesar Salad': 'caesar-salad.jpg',
+    'Grilled Salmon': 'grilled-salmon.jpg',
+    'Ribeye Steak': 'ribeye-steak.jpg',
+    'Vegetable Risotto': 'vegetable-risotto.jpg',
+    'Tiramisu': 'tiramisu.jpg',
+    'Cheesecake': 'cheesecake.jpg',
+    'Red Wine (Glass)': 'red-wine.jpg',
+    'White Wine (Glass)': 'white-wine.jpg',
+    'Craft Beer': 'craft-beer.jpg',
+    'Espresso': 'espresso.jpg',
 }
 
 os.makedirs(MENU_UPLOAD_DIR, exist_ok=True)
@@ -134,7 +134,12 @@ def ensure_menu_table():
                     ''', (category, item_name, description, price, image_urls.get(item_name), display_order))
             else:
                 for item_name, image_url in image_urls.items():
-                    conn.execute('UPDATE menu_items SET image_url = %s WHERE item_name = %s AND image_url IS NULL', (image_url, item_name))
+                    old_default_url = f"/api/menu-images/default-{os.path.splitext(DEFAULT_MENU_IMAGES[item_name])[0]}.png"
+                    conn.execute('''
+                        UPDATE menu_items
+                        SET image_url = %s
+                        WHERE item_name = %s AND (image_url IS NULL OR image_url = %s)
+                    ''', (image_url, item_name, old_default_url))
             conn.commit()
     except Exception as e:
         app.logger.warning(f'Menu table setup skipped: {e}')
