@@ -147,7 +147,7 @@ export default function Reservations() {
               You&apos;ll receive an email receipt right away. Reservations are confirmed after our team reviews the request; for changes or cancellations, please call at least 24 hours in advance.
             </p>
             <button type="submit" className="btn btn-primary submit-btn" disabled={status === 'loading'}>
-              {status === 'loading' ? 'Booking...' : 'Confirm Reservation'}
+              {status === 'loading' ? 'Sending request...' : 'Place Reservation Request'}
             </button>
 
             {status === 'success' && result && (
