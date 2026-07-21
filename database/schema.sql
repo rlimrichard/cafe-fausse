@@ -12,6 +12,8 @@ CREATE TABLE IF NOT EXISTS reservations (
     customer_id   INTEGER NOT NULL REFERENCES customers(id) ON DELETE CASCADE,
     time_slot     TIMESTAMP NOT NULL,
     table_number  INTEGER NOT NULL CHECK (table_number BETWEEN 1 AND 30),
+    guest_count   INTEGER NOT NULL DEFAULT 1 CHECK (guest_count BETWEEN 1 AND 30),
+    status        VARCHAR(20) NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'accepted', 'denied')),
     created_at    TIMESTAMP NOT NULL DEFAULT NOW(),
     CONSTRAINT uq_time_slot_table_number UNIQUE (time_slot, table_number)
 );

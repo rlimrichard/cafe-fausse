@@ -145,9 +145,9 @@ export default function Reservations() {
 
             {status === 'success' && result && (
               <div className="booking-success">
-                <h3>Reservation Confirmed!</h3>
-                <p>Table {result.table_number} has been reserved for {result.guests} guest{result.guests !== 1 ? 's' : ''}.</p>
-                <p>A confirmation will be sent to {result.email}.</p>
+                <h3>Request Received!</h3>
+                <p>Your request for {result.guests} guest{result.guests !== 1 ? 's' : ''} on {formatSlot(result.time_slot)} is pending confirmation.</p>
+                <p>We will reach out to <strong>{result.email}</strong> once the restaurant confirms your table.</p>
               </div>
             )}
             {status === 'error' && result && (
@@ -171,6 +171,13 @@ export default function Reservations() {
       </div>
     </div>
   )
+}
+
+function formatSlot(iso) {
+  return new Date(iso).toLocaleString('en-US', {
+    weekday: 'short', month: 'short', day: 'numeric',
+    hour: 'numeric', minute: '2-digit',
+  })
 }
 
 function formatTime(t) {
