@@ -17,8 +17,8 @@ const IMAGES = [
 ]
 
 const AWARDS = [
-  { year: '2022', title: 'Culinary Excellence Award', source: 'Gusto Quarterly' },
-  { year: '2023', title: 'Restaurant of the Year', source: 'The Table Guide' },
+  { year: '2022', title: 'Culinary Excellence Award' },
+  { year: '2023', title: 'Restaurant of the Year' },
   { year: '2023', title: 'Best Fine Dining Experience', source: 'Foodie Magazine' },
 ]
 
