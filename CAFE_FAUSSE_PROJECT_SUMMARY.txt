@@ -1,0 +1,71 @@
+Café Fausse - Project Summary
+Updated: July 21, 2026
+
+Site and deployment
+-------------------
+- Public site: https://ecbproj1.elcaro.io/
+- Source repository: https://github.com/rlimrichard/cafe-fausse
+- Production host: OCI Linux instance, accessed as the `opc` user using the
+  project SSH key.
+- Production application directory: /opt/cafe_fausse
+- Deployment command on the host: sudo /usr/local/sbin/deploy-cafe-fausse
+- HTTPS is enabled and the site is served through Nginx and Gunicorn.
+- The deployment process pulls the main branch from GitHub, installs/builds
+  dependencies, and restarts the application.
+
+Public website work completed
+-----------------------------
+- Restored the restaurant name to Café Fausse and retained the Italian theme.
+- Updated the menu presentation: prices are aligned at the row end and shown
+  as clean numbers without a dollar symbol (for example, 8 and 8.5).
+- Added/optimized menu-item images to reduce page-load time.
+- Added founder portraits and a staff group photo on the About page.
+- Added small graphics to the three "Our Commitment" cards.
+- Updated the Gallery with all supplied restaurant photographs, grouped the
+  event tile with interior tiles, and placed the behind-the-scenes image last.
+- Added fictitious sources to all awards shown in the Gallery.
+
+Admin and database work completed
+---------------------------------
+- Added menu management so an admin can create, update, delete, price, and
+  assign photos to menu items. Categories use a dropdown selector.
+- Added reservation management, including pending/accepted/denied states,
+  accurate counts, bulk operations, and a calendar/hourly view of accepted
+  reservations.
+- Made the Calendar the first/default Admin tab.
+- Added an Admin link in the top navigation while an admin session is active.
+- Added database record counts that remain visible on the Admin database tabs.
+- Added newsletter-subscriber viewing and removal; subscribers are stored in
+  the database.
+- Added visitor-event tracking and visitor insights on the Admin page.
+
+Email configuration and behavior
+--------------------------------
+- Live email is sent through the Café Fausse Gmail account using a Gmail App
+  Password stored only in the protected server .env file. The credential is
+  not committed to Git.
+- Newsletter signups receive a welcome email describing chef specials and
+  seasonal fare. Duplicate signups do not create duplicate records.
+- Reservation acceptance and denial send notification emails.
+- New reservation submissions now also send an immediate "request received"
+  email; the reservation remains saved even if an email provider has a
+  temporary delivery problem.
+- Outgoing messages include both plain-text and HTML versions for better mail
+  client compatibility.
+- A test acceptance email to Hotmail was accepted by Gmail but went to the
+  recipient's Junk folder. Marking Café Fausse mail as "Not junk" and adding
+  faussecafe@gmail.com as a contact should improve inbox placement.
+
+Recent reservation fix
+----------------------
+- A repeat booking could previously return a generic error because the
+  customers table requires a unique email address.
+- The reservation API now reuses an existing customer record (including a
+  newsletter subscriber) and creates the new reservation normally.
+
+Operational notes
+-----------------
+- Do not store Gmail App Passwords or private SSH keys in the repository.
+- Keep the local `inspect-production-host.ps1` file untracked unless it is
+  intentionally reviewed and added later.
+- Current production changes are deployed from the GitHub main branch.
