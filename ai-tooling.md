@@ -12,6 +12,12 @@ deployment steps.
 
 AI was used to help:
 
+Claude used by Richard: 
+
+[insert here]
+
+Codex used by Moe:
+
 - Review the existing full-stack project and identify the React frontend,
   Flask API, PostgreSQL schema, and production deployment structure.
 - Implement and refine public pages, including the menu, reservation flow,
