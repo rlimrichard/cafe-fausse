@@ -1,4 +1,6 @@
 import './AboutUs.css'
+import antonioRossiPortrait from '../assets/founders/antonio-rossi.jpg'
+import mariaLopezPortrait from '../assets/founders/maria-lopez.jpg'
 
 export default function AboutUs() {
   return (
@@ -25,7 +27,7 @@ export default function AboutUs() {
           <h2>Meet the Founders</h2>
           <div className="founders-grid">
             <div className="founder-card">
-              <div className="founder-avatar">AR</div>
+              <img className="founder-photo" src={antonioRossiPortrait} alt="Chef Antonio Rossi" />
               <h3>Chef Antonio Rossi</h3>
               <p className="founder-title">Executive Chef & Co-Founder</p>
               <p>
@@ -36,7 +38,7 @@ export default function AboutUs() {
               </p>
             </div>
             <div className="founder-card">
-              <div className="founder-avatar">ML</div>
+              <img className="founder-photo" src={mariaLopezPortrait} alt="Maria Lopez" />
               <h3>Maria Lopez</h3>
               <p className="founder-title">Restaurateur & Co-Founder</p>
               <p>
