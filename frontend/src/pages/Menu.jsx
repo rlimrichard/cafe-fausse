@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react'
 import './Menu.css'
 import bruschettaImage from '../assets/menu/bruschetta.png'
 import caesarSaladImage from '../assets/menu/caesar-salad.png'
@@ -11,7 +12,7 @@ import whiteWineImage from '../assets/menu/white-wine.png'
 import craftBeerImage from '../assets/menu/craft-beer.png'
 import espressoImage from '../assets/menu/espresso.png'
 
-const MENU = [
+const FALLBACK_MENU = [
   {
     category: 'Starters',
     items: [
@@ -45,7 +46,39 @@ const MENU = [
   },
 ]
 
+const FALLBACK_IMAGES = Object.fromEntries(
+  FALLBACK_MENU.flatMap(({ items }) => items.map(item => [item.name, item.image]))
+)
+
+function groupMenuItems(items) {
+  const preferredOrder = FALLBACK_MENU.map(group => group.category)
+  const grouped = items.reduce((groups, item) => {
+    const category = item.category || 'Menu'
+    if (!groups[category]) groups[category] = []
+    groups[category].push({ ...item, image: item.image_url || FALLBACK_IMAGES[item.name] })
+    return groups
+  }, {})
+  return Object.entries(grouped)
+    .sort(([left], [right]) => {
+      const leftIndex = preferredOrder.indexOf(left)
+      const rightIndex = preferredOrder.indexOf(right)
+      return (leftIndex === -1 ? 99 : leftIndex) - (rightIndex === -1 ? 99 : rightIndex) || left.localeCompare(right)
+    })
+    .map(([category, items]) => ({ category, items }))
+}
+
 export default function Menu() {
+  const [menu, setMenu] = useState(FALLBACK_MENU)
+
+  useEffect(() => {
+    fetch('/api/menu')
+      .then(res => res.ok ? res.json() : Promise.reject())
+      .then(items => {
+        if (Array.isArray(items) && items.length) setMenu(groupMenuItems(items))
+      })
+      .catch(() => {})
+  }, [])
+
   return (
     <div className="menu-page section">
       <div className="container">
@@ -53,13 +86,15 @@ export default function Menu() {
         <h1 className="section-title">Curated with Care</h1>
         <div className="divider" />
 
-        {MENU.map(({ category, items }) => (
+        {menu.map(({ category, items }) => (
           <section key={category} className="menu-category">
             <h2 className="category-title">{category}</h2>
             <div className="menu-items">
               {items.map(item => (
                 <div key={item.name} className="menu-item">
-                  <img className="menu-item-image" src={item.image} alt={item.name} loading="lazy" />
+                  {item.image
+                    ? <img className="menu-item-image" src={item.image} alt={item.name} loading="lazy" />
+                    : <div className="menu-item-image menu-item-image--empty" aria-label={`No image for ${item.name}`}>No image</div>}
                   <div className="menu-item-info">
                     <h3>{item.name}</h3>
                     <p>{item.description}</p>

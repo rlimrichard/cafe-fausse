@@ -3,15 +3,18 @@ import random
 import re
 import smtplib
 import logging
+import uuid
 from collections import deque
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from datetime import datetime, timezone
-from flask import Flask, request, jsonify
+from decimal import Decimal, InvalidOperation
+from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
 import psycopg
 from psycopg.rows import dict_row
 from dotenv import load_dotenv
+from werkzeug.utils import secure_filename
 
 load_dotenv()
 
@@ -43,6 +46,12 @@ SMTP_PORT     = int(os.environ.get('SMTP_PORT', 587))
 SMTP_USER     = os.environ.get('SMTP_USER', '')
 SMTP_PASSWORD = os.environ.get('SMTP_PASSWORD', '')
 EMAIL_FROM    = os.environ.get('EMAIL_FROM', SMTP_USER)
+MENU_UPLOAD_DIR = os.environ.get('MENU_UPLOAD_DIR', os.path.join(os.path.dirname(__file__), 'uploads', 'menu'))
+MAX_MENU_IMAGE_BYTES = 5 * 1024 * 1024
+ALLOWED_MENU_IMAGE_EXTENSIONS = {'.jpg', '.jpeg', '.png', '.webp'}
+
+os.makedirs(MENU_UPLOAD_DIR, exist_ok=True)
+app.config['MAX_CONTENT_LENGTH'] = MAX_MENU_IMAGE_BYTES
 
 # Keyed by Python weekday: Mon=0 … Sun=6
 HOURS = {
@@ -60,6 +69,108 @@ EMAIL_RE = re.compile(r'^[^\s@]+@[^\s@]+\.[^\s@]+$')
 
 def get_conn():
     return psycopg.connect(DB_URL, row_factory=dict_row)
+
+
+def ensure_menu_table():
+    """Create and seed the menu table on existing deployments without a migration runner."""
+    seed_items = [
+        ('Starters', 'Bruschetta', 'Fresh tomatoes, basil, olive oil, and toasted baguette slices', Decimal('8.50'), 10),
+        ('Starters', 'Caesar Salad', 'Crisp romaine with homemade Caesar dressing', Decimal('9.00'), 20),
+        ('Main Courses', 'Grilled Salmon', 'Served with lemon butter sauce and seasonal vegetables', Decimal('22.00'), 10),
+        ('Main Courses', 'Ribeye Steak', '12 oz prime cut with garlic mashed potatoes', Decimal('28.00'), 20),
+        ('Main Courses', 'Vegetable Risotto', 'Creamy Arborio rice with wild mushrooms', Decimal('18.00'), 30),
+        ('Desserts', 'Tiramisu', 'Classic Italian dessert with mascarpone', Decimal('7.50'), 10),
+        ('Desserts', 'Cheesecake', 'Creamy cheesecake with berry compote', Decimal('7.00'), 20),
+        ('Beverages', 'Red Wine (Glass)', 'A selection of Italian reds', Decimal('10.00'), 10),
+        ('Beverages', 'White Wine (Glass)', 'Crisp and refreshing', Decimal('9.00'), 20),
+        ('Beverages', 'Craft Beer', 'Local artisan brews', Decimal('6.00'), 30),
+        ('Beverages', 'Espresso', 'Strong and aromatic', Decimal('3.00'), 40),
+    ]
+    try:
+        with get_conn() as conn:
+            conn.execute('''
+                CREATE TABLE IF NOT EXISTS menu_items (
+                    id SERIAL PRIMARY KEY,
+                    category VARCHAR(80) NOT NULL,
+                    item_name VARCHAR(120) NOT NULL UNIQUE,
+                    description TEXT NOT NULL,
+                    price NUMERIC(10, 2) NOT NULL CHECK (price >= 0),
+                    image_url VARCHAR(500),
+                    display_order INTEGER NOT NULL DEFAULT 0,
+                    created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+                    updated_at TIMESTAMP NOT NULL DEFAULT NOW()
+                )
+            ''')
+            for item in seed_items:
+                conn.execute('''
+                    INSERT INTO menu_items (category, item_name, description, price, display_order)
+                    VALUES (%s, %s, %s, %s, %s)
+                    ON CONFLICT (item_name) DO NOTHING
+                ''', item)
+            conn.commit()
+    except Exception as e:
+        app.logger.warning(f'Menu table setup skipped: {e}')
+
+
+def serialize_menu_item(row):
+    return {
+        'id': row['id'],
+        'category': row['category'],
+        'name': row['item_name'],
+        'description': row['description'],
+        'price': float(row['price']),
+        'image_url': row['image_url'],
+        'display_order': row['display_order'],
+    }
+
+
+def validate_menu_form(data):
+    category = (data.get('category') or '').strip()
+    name = (data.get('name') or '').strip()
+    description = (data.get('description') or '').strip()
+    image_url = (data.get('image_url') or '').strip() or None
+    try:
+        price = Decimal(str(data.get('price'))).quantize(Decimal('0.01'))
+        if price < 0:
+            raise InvalidOperation
+    except (InvalidOperation, TypeError, ValueError):
+        return None, 'Price must be a non-negative amount.'
+    try:
+        display_order = int(data.get('display_order') or 0)
+    except (TypeError, ValueError):
+        return None, 'Display order must be a whole number.'
+    if not category or len(category) > 80:
+        return None, 'Category is required and must be 80 characters or fewer.'
+    if not name or len(name) > 120:
+        return None, 'Item name is required and must be 120 characters or fewer.'
+    if not description:
+        return None, 'Description is required.'
+    if image_url and not (image_url.startswith('/') or image_url.startswith('https://')):
+        return None, 'Image URL must start with / or https://.'
+    return (category, name, description, price, image_url, display_order), None
+
+
+def save_menu_image(file):
+    if not file or not file.filename:
+        return None, None
+    if file.content_length and file.content_length > MAX_MENU_IMAGE_BYTES:
+        return None, 'Image must be 5 MB or smaller.'
+    safe_name = secure_filename(file.filename)
+    extension = os.path.splitext(safe_name)[1].lower()
+    if extension not in ALLOWED_MENU_IMAGE_EXTENSIONS:
+        return None, 'Use a JPG, PNG, or WebP image.'
+    filename = f'{uuid.uuid4().hex}{extension}'
+    file.save(os.path.join(MENU_UPLOAD_DIR, filename))
+    return f'/api/menu-images/{filename}', None
+
+
+def delete_uploaded_menu_image(image_url):
+    if not image_url or not image_url.startswith('/api/menu-images/'):
+        return
+    filename = os.path.basename(image_url)
+    path = os.path.join(MENU_UPLOAD_DIR, filename)
+    if os.path.isfile(path):
+        os.remove(path)
 
 
 def is_valid_time_slot(dt: datetime) -> bool:
@@ -173,6 +284,9 @@ def email_denied(name, to, time_slot, guests):
     send_email(to, subject, html)
 
 
+ensure_menu_table()
+
+
 @app.post('/api/reservations')
 def create_reservation():
     data = request.get_json(silent=True) or {}
@@ -262,6 +376,124 @@ def newsletter_signup():
     except Exception as e:
         app.logger.error(f'Newsletter error: {e}')
         return jsonify(error='An unexpected error occurred.'), 500
+
+
+@app.get('/api/menu')
+def list_menu_items():
+    try:
+        with get_conn() as conn:
+            rows = conn.execute('''
+                SELECT id, category, item_name, description, price, image_url, display_order
+                FROM menu_items
+                ORDER BY category, display_order, item_name
+            ''').fetchall()
+        return jsonify([serialize_menu_item(row) for row in rows]), 200
+    except Exception as e:
+        app.logger.error(f'Menu list error: {e}')
+        return jsonify(error='Failed to load menu.'), 500
+
+
+@app.get('/api/menu-images/<path:filename>')
+def menu_image(filename):
+    return send_from_directory(MENU_UPLOAD_DIR, filename)
+
+
+@app.get('/api/admin/menu-items')
+def admin_list_menu_items():
+    denied = check_admin(request)
+    if denied:
+        return denied
+    return list_menu_items()
+
+
+@app.post('/api/admin/menu-items')
+def admin_create_menu_item():
+    denied = check_admin(request)
+    if denied:
+        return denied
+
+    values, error = validate_menu_form(request.form)
+    if error:
+        return jsonify(error=error), 400
+    category, name, description, price, image_url, display_order = values
+    uploaded_url, error = save_menu_image(request.files.get('image'))
+    if error:
+        return jsonify(error=error), 400
+    image_url = uploaded_url or image_url
+
+    try:
+        with get_conn() as conn:
+            row = conn.execute('''
+                INSERT INTO menu_items (category, item_name, description, price, image_url, display_order)
+                VALUES (%s, %s, %s, %s, %s, %s)
+                RETURNING id, category, item_name, description, price, image_url, display_order
+            ''', (category, name, description, price, image_url, display_order)).fetchone()
+            conn.commit()
+        return jsonify(serialize_menu_item(row)), 201
+    except Exception as e:
+        delete_uploaded_menu_image(uploaded_url)
+        app.logger.error(f'Menu create error: {e}')
+        return jsonify(error='Unable to create menu item. The item name may already exist.'), 400
+
+
+@app.patch('/api/admin/menu-items/<int:item_id>')
+def admin_update_menu_item(item_id):
+    denied = check_admin(request)
+    if denied:
+        return denied
+
+    values, error = validate_menu_form(request.form)
+    if error:
+        return jsonify(error=error), 400
+    category, name, description, price, image_url, display_order = values
+    uploaded_url, error = save_menu_image(request.files.get('image'))
+    if error:
+        return jsonify(error=error), 400
+
+    try:
+        with get_conn() as conn:
+            existing = conn.execute('SELECT image_url FROM menu_items WHERE id = %s', (item_id,)).fetchone()
+            if not existing:
+                return jsonify(error='Menu item not found.'), 404
+            if uploaded_url:
+                final_image_url = uploaded_url
+            elif request.form.get('remove_image') == 'true':
+                final_image_url = None
+            else:
+                final_image_url = image_url or existing['image_url']
+            row = conn.execute('''
+                UPDATE menu_items
+                SET category = %s, item_name = %s, description = %s, price = %s,
+                    image_url = %s, display_order = %s, updated_at = NOW()
+                WHERE id = %s
+                RETURNING id, category, item_name, description, price, image_url, display_order
+            ''', (category, name, description, price, final_image_url, display_order, item_id)).fetchone()
+            conn.commit()
+        if existing['image_url'] != final_image_url:
+            delete_uploaded_menu_image(existing['image_url'])
+        return jsonify(serialize_menu_item(row)), 200
+    except Exception as e:
+        delete_uploaded_menu_image(uploaded_url)
+        app.logger.error(f'Menu update error: {e}')
+        return jsonify(error='Unable to update menu item. The item name may already exist.'), 400
+
+
+@app.delete('/api/admin/menu-items/<int:item_id>')
+def admin_delete_menu_item(item_id):
+    denied = check_admin(request)
+    if denied:
+        return denied
+    try:
+        with get_conn() as conn:
+            row = conn.execute('DELETE FROM menu_items WHERE id = %s RETURNING image_url', (item_id,)).fetchone()
+            conn.commit()
+        if not row:
+            return jsonify(error='Menu item not found.'), 404
+        delete_uploaded_menu_image(row['image_url'])
+        return jsonify(message='Menu item deleted.', id=item_id), 200
+    except Exception as e:
+        app.logger.error(f'Menu delete error: {e}')
+        return jsonify(error='Unable to delete menu item.'), 500
 
 
 # ── Admin endpoints ───────────────────────────────────────────────────────────

@@ -205,6 +205,84 @@
   border: 1px solid #2a2a2a;
 }
 
+/* Menu manager */
+.menu-manager {
+  margin: 2rem 0;
+  padding: 1.25rem;
+  border: 1px solid #2a2a2a;
+  border-radius: 8px;
+  background: #151515;
+}
+
+.menu-manager-heading {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: flex-start;
+  margin-bottom: 1.25rem;
+}
+
+.menu-manager h2 { margin: 0 0 0.25rem; color: #fff; font-size: 1.2rem; }
+.menu-manager-heading p { margin: 0; color: #888; font-size: 0.85rem; }
+
+.menu-editor {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.85rem;
+  padding: 1rem;
+  border: 1px solid #303030;
+  background: #101010;
+}
+
+.menu-editor label { display: flex; flex-direction: column; gap: 0.35rem; color: #aaa; font-size: 0.78rem; }
+.menu-editor label span { color: #666; font-size: 0.7rem; }
+.menu-editor input,
+.menu-editor textarea {
+  box-sizing: border-box;
+  width: 100%;
+  border: 1px solid #3b3b3b;
+  border-radius: 4px;
+  background: #1b1b1b;
+  color: #eee;
+  padding: 0.55rem 0.65rem;
+  font: inherit;
+}
+.menu-editor input:focus,
+.menu-editor textarea:focus { outline: none; border-color: #b8972a; }
+.menu-editor-description { grid-column: span 2; }
+.menu-editor-actions { display: flex; align-items: end; gap: 0.5rem; }
+
+.menu-manager-list { margin-top: 1rem; display: grid; gap: 0.7rem; }
+.menu-manager-item {
+  display: grid;
+  grid-template-columns: 5rem minmax(0, 1fr) auto auto;
+  gap: 0.9rem;
+  align-items: center;
+  padding: 0.7rem;
+  border: 1px solid #292929;
+  background: #111;
+}
+.menu-manager-item img,
+.menu-manager-no-image { width: 5rem; height: 4rem; object-fit: cover; background: #252525; }
+.menu-manager-no-image { display: grid; place-items: center; color: #777; font-size: 0.7rem; }
+.menu-manager-category { color: #b8972a; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; }
+.menu-manager-item h3 { margin: 0.15rem 0; color: #eee; font-size: 0.95rem; }
+.menu-manager-item p { margin: 0; color: #888; font-size: 0.8rem; }
+.menu-manager-item > strong { color: #e6c768; white-space: nowrap; }
+
+@media (max-width: 800px) {
+  .menu-editor { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .menu-manager-item { grid-template-columns: 4rem minmax(0, 1fr) auto; }
+  .menu-manager-item .res-actions { grid-column: 2 / -1; }
+}
+
+@media (max-width: 520px) {
+  .admin-page { padding: 1rem; }
+  .menu-manager-heading { flex-direction: column; }
+  .menu-editor { grid-template-columns: 1fr; }
+  .menu-editor-description { grid-column: auto; }
+}
+
 .admin-table {
   width: 100%;
   border-collapse: collapse;

@@ -4,6 +4,7 @@ import './Admin.css'
 const STATUS_LABELS = { pending: 'Pending', accepted: 'Accepted', denied: 'Denied' }
 const FILTERS = ['all', 'pending', 'accepted', 'denied']
 const LEVEL_CLASS = { INFO: 'log-info', WARNING: 'log-warn', ERROR: 'log-error', DEBUG: 'log-debug' }
+const EMPTY_MENU_ITEM = { category: 'Starters', name: '', description: '', price: '', image_url: '', display_order: 0 }
 
 export default function Admin() {
   const [password, setPassword] = useState('')
@@ -28,6 +29,7 @@ export default function Admin() {
   const [dbTab, setDbTab] = useState('customers')
   const [dbData, setDbData] = useState({})
   const [dbLoading, setDbLoading] = useState(false)
+  const [menuOpen, setMenuOpen] = useState(false)
 
   const showToast = (msg, type = 'success') => {
     setToast({ msg, type })
@@ -248,6 +250,12 @@ export default function Admin() {
         </div>
         <div className="admin-header-actions">
           <button
+            className={`admin-logs-toggle${menuOpen ? ' active' : ''}`}
+            onClick={() => setMenuOpen(open => !open)}
+          >
+            {menuOpen ? 'Hide Menu' : 'Manage Menu'}
+          </button>
+          <button
             className={`admin-logs-toggle${dbOpen ? ' active' : ''}`}
             onClick={() => setDbOpen(o => !o)}
           >
@@ -401,12 +409,14 @@ export default function Admin() {
       )}
 
       {/* ── DB panel ── */}
+      {menuOpen && <MenuManager password={password} showToast={showToast} />}
+
       {dbOpen && (
         <div className="db-panel">
           <div className="db-panel-header">
             <span className="db-panel-title">Database</span>
             <div className="db-tabs">
-              {['customers', 'reservations'].map(t => (
+              {['customers', 'reservations', 'menu_items'].map(t => (
                 <button
                   key={t}
                   className={`db-tab${dbTab === t ? ' active' : ''}`}
@@ -490,6 +500,133 @@ export default function Admin() {
         </div>
       )}
     </div>
+  )
+}
+
+function MenuManager({ password, showToast }) {
+  const [items, setItems] = useState([])
+  const [form, setForm] = useState(EMPTY_MENU_ITEM)
+  const [editingId, setEditingId] = useState(null)
+  const [imageFile, setImageFile] = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
+
+  const loadItems = useCallback(async () => {
+    setLoading(true)
+    try {
+      const res = await fetch('/api/admin/menu-items', { headers: { 'X-Admin-Password': password } })
+      const data = await res.json()
+      if (res.ok) setItems(Array.isArray(data) ? data : [])
+      else showToast(data.error || 'Failed to load menu.', 'error')
+    } catch {
+      showToast('Failed to load menu.', 'error')
+    } finally {
+      setLoading(false)
+    }
+  }, [password, showToast])
+
+  useEffect(() => { loadItems() }, [loadItems])
+
+  function resetForm() {
+    setForm(EMPTY_MENU_ITEM)
+    setEditingId(null)
+    setImageFile(null)
+  }
+
+  function editItem(item) {
+    setForm({ category: item.category, name: item.name, description: item.description, price: item.price.toFixed(2), image_url: item.image_url || '', display_order: item.display_order })
+    setEditingId(item.id)
+    setImageFile(null)
+  }
+
+  async function saveItem(event) {
+    event.preventDefault()
+    setSaving(true)
+    const data = new FormData()
+    Object.entries(form).forEach(([key, value]) => data.append(key, value))
+    if (imageFile) data.append('image', imageFile)
+    try {
+      const res = await fetch(editingId ? `/api/admin/menu-items/${editingId}` : '/api/admin/menu-items', {
+        method: editingId ? 'PATCH' : 'POST',
+        headers: { 'X-Admin-Password': password },
+        body: data,
+      })
+      const response = await res.json()
+      if (!res.ok) {
+        showToast(response.error || 'Unable to save menu item.', 'error')
+        return
+      }
+      setItems(current => editingId ? current.map(item => item.id === response.id ? response : item) : [...current, response])
+      showToast(editingId ? 'Menu item updated.' : 'Menu item added.')
+      resetForm()
+    } catch {
+      showToast('Network error while saving menu item.', 'error')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  async function deleteItem(item) {
+    if (!window.confirm(`Delete ${item.name} from the menu?`)) return
+    try {
+      const res = await fetch(`/api/admin/menu-items/${item.id}`, { method: 'DELETE', headers: { 'X-Admin-Password': password } })
+      const data = await res.json()
+      if (!res.ok) {
+        showToast(data.error || 'Unable to delete menu item.', 'error')
+        return
+      }
+      setItems(current => current.filter(menuItem => menuItem.id !== item.id))
+      if (editingId === item.id) resetForm()
+      showToast('Menu item deleted.')
+    } catch {
+      showToast('Network error while deleting menu item.', 'error')
+    }
+  }
+
+  return (
+    <section className="menu-manager">
+      <div className="menu-manager-heading">
+        <div>
+          <h2>Menu Manager</h2>
+          <p>Add dishes, update descriptions and pricing, or upload a replacement photo.</p>
+        </div>
+        <button className="log-btn" onClick={loadItems} disabled={loading}>Refresh</button>
+      </div>
+
+      <form className="menu-editor" onSubmit={saveItem}>
+        <label>Category<input required value={form.category} onChange={e => setForm(current => ({ ...current, category: e.target.value }))} /></label>
+        <label>Item name<input required value={form.name} onChange={e => setForm(current => ({ ...current, name: e.target.value }))} /></label>
+        <label>Price<input required type="number" min="0" step="0.01" value={form.price} onChange={e => setForm(current => ({ ...current, price: e.target.value }))} /></label>
+        <label>Display order<input type="number" value={form.display_order} onChange={e => setForm(current => ({ ...current, display_order: e.target.value }))} /></label>
+        <label className="menu-editor-description">Description<textarea required rows="3" value={form.description} onChange={e => setForm(current => ({ ...current, description: e.target.value }))} /></label>
+        <label>Image URL <span>(optional)</span><input type="url" placeholder="https://…" value={form.image_url} onChange={e => setForm(current => ({ ...current, image_url: e.target.value }))} /></label>
+        <label>Upload photo <span>(JPG, PNG, WebP; max 5 MB)</span><input type="file" accept="image/jpeg,image/png,image/webp" onChange={e => setImageFile(e.target.files?.[0] || null)} /></label>
+        <div className="menu-editor-actions">
+          <button className="action-btn accept-btn" type="submit" disabled={saving}>{saving ? 'Saving…' : editingId ? 'Save changes' : 'Add menu item'}</button>
+          {editingId && <button className="action-btn pending-btn" type="button" onClick={resetForm}>Cancel edit</button>}
+        </div>
+      </form>
+
+      {loading ? <div className="admin-loading">Loading menu…</div> : (
+        <div className="menu-manager-list">
+          {items.map(item => (
+            <article key={item.id} className="menu-manager-item">
+              {item.image_url ? <img src={item.image_url} alt="" /> : <div className="menu-manager-no-image">No photo</div>}
+              <div className="menu-manager-item-copy">
+                <span className="menu-manager-category">{item.category}</span>
+                <h3>{item.name}</h3>
+                <p>{item.description}</p>
+              </div>
+              <strong>${item.price.toFixed(2)}</strong>
+              <div className="res-actions">
+                <button className="action-btn pending-btn" onClick={() => editItem(item)}>Edit</button>
+                <button className="action-btn delete-btn" onClick={() => deleteItem(item)}>Delete</button>
+              </div>
+            </article>
+          ))}
+        </div>
+      )}
+    </section>
   )
 }
 

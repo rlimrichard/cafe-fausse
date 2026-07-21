@@ -17,3 +17,15 @@ CREATE TABLE IF NOT EXISTS reservations (
     created_at    TIMESTAMP NOT NULL DEFAULT NOW(),
     CONSTRAINT uq_time_slot_table_number UNIQUE (time_slot, table_number)
 );
+
+CREATE TABLE IF NOT EXISTS menu_items (
+    id            SERIAL PRIMARY KEY,
+    category      VARCHAR(80) NOT NULL,
+    item_name     VARCHAR(120) NOT NULL UNIQUE,
+    description   TEXT NOT NULL,
+    price         NUMERIC(10, 2) NOT NULL CHECK (price >= 0),
+    image_url     VARCHAR(500),
+    display_order INTEGER NOT NULL DEFAULT 0,
+    created_at    TIMESTAMP NOT NULL DEFAULT NOW(),
+    updated_at    TIMESTAMP NOT NULL DEFAULT NOW()
+);
