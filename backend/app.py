@@ -557,7 +557,7 @@ def lookup_reservations():
 @app.post('/api/newsletter')
 def newsletter_signup():
     data = request.get_json(silent=True) or {}
-    email = (data.get('email') or '').strip()
+    email = (data.get('email') or '').strip().lower()
 
     if not email or not EMAIL_RE.match(email):
         return jsonify(error='Please provide a valid email address.'), 400
