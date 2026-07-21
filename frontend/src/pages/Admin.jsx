@@ -18,7 +18,7 @@ export default function Admin() {
   const [toast, setToast] = useState(null)
   const [selected, setSelected] = useState(new Set())
   const [bulkLoading, setBulkLoading] = useState(false)
-  const [activeView, setActiveView] = useState('reservations')
+  const [activeView, setActiveView] = useState('calendar')
 
   const [logs, setLogs] = useState([])
   const [logsPaused, setLogsPaused] = useState(false)
@@ -289,6 +289,12 @@ export default function Admin() {
         </div>
         <div className="admin-header-actions">
           <button
+            className={`admin-logs-toggle${calendarOpen ? ' active' : ''}`}
+            onClick={() => setActiveView('calendar')}
+          >
+            Calendar
+          </button>
+          <button
             className={`admin-logs-toggle${activeView === 'reservations' ? ' active' : ''}`}
             onClick={() => setActiveView('reservations')}
           >
@@ -305,12 +311,6 @@ export default function Admin() {
             onClick={() => setActiveView('subscribers')}
           >
             Subscribers
-          </button>
-          <button
-            className={`admin-logs-toggle${calendarOpen ? ' active' : ''}`}
-            onClick={() => setActiveView('calendar')}
-          >
-            Calendar
           </button>
           <button
             className={`admin-logs-toggle${dbOpen ? ' active' : ''}`}
