@@ -52,12 +52,18 @@
   margin-bottom: 0.25rem;
 }
 
+.menu-item-info {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
 .menu-item-info p {
   color: var(--text-muted);
   font-size: 0.9rem;
 }
 
 .menu-item-price {
+  margin-left: auto;
   font-family: var(--font-serif);
   font-size: 1.1rem;
   color: var(--gold);

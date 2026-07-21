@@ -5,6 +5,7 @@ const STATUS_LABELS = { pending: 'Pending', accepted: 'Accepted', denied: 'Denie
 const FILTERS = ['all', 'pending', 'accepted', 'denied']
 const LEVEL_CLASS = { INFO: 'log-info', WARNING: 'log-warn', ERROR: 'log-error', DEBUG: 'log-debug' }
 const EMPTY_MENU_ITEM = { category: 'Starters', name: '', description: '', price: '', image_url: '', display_order: 0 }
+const MENU_CATEGORIES = ['Starters', 'Main Courses', 'Desserts', 'Beverages']
 
 export default function Admin() {
   const [password, setPassword] = useState('')
@@ -604,7 +605,11 @@ function MenuManager({ password, showToast }) {
       </div>
 
       <form className="menu-editor" onSubmit={saveItem}>
-        <label>Category<input required value={form.category} onChange={e => setForm(current => ({ ...current, category: e.target.value }))} /></label>
+        <label>Category
+          <select value={form.category} onChange={e => setForm(current => ({ ...current, category: e.target.value }))}>
+            {MENU_CATEGORIES.map(category => <option key={category} value={category}>{category}</option>)}
+          </select>
+        </label>
         <label>Item name<input required value={form.name} onChange={e => setForm(current => ({ ...current, name: e.target.value }))} /></label>
         <label>Price<input required type="number" min="0" step="0.01" value={form.price} onChange={e => setForm(current => ({ ...current, price: e.target.value }))} /></label>
         <label>Display order<input type="number" value={form.display_order} onChange={e => setForm(current => ({ ...current, display_order: e.target.value }))} /></label>

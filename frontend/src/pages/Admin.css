@@ -237,6 +237,7 @@
 .menu-editor label { display: flex; flex-direction: column; gap: 0.35rem; color: #aaa; font-size: 0.78rem; }
 .menu-editor label span { color: #666; font-size: 0.7rem; }
 .menu-editor input,
+.menu-editor select,
 .menu-editor textarea {
   box-sizing: border-box;
   width: 100%;
