@@ -5,18 +5,20 @@ import smtplib
 import logging
 import uuid
 import shutil
+from io import BytesIO
 from collections import deque
 from email.utils import formatdate, make_msgid
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from datetime import datetime, timezone
 from decimal import Decimal, InvalidOperation
-from flask import Flask, request, jsonify, send_from_directory
+from flask import Flask, request, jsonify, send_file, send_from_directory
 from flask_cors import CORS
 import psycopg
 from psycopg.rows import dict_row
 from dotenv import load_dotenv
-from werkzeug.utils import secure_filename
+from werkzeug.utils import safe_join, secure_filename
+from PIL import Image
 
 load_dotenv()
 
@@ -51,6 +53,7 @@ EMAIL_FROM    = os.environ.get('EMAIL_FROM', SMTP_USER)
 MENU_UPLOAD_DIR = os.environ.get('MENU_UPLOAD_DIR', os.path.join(os.path.dirname(__file__), 'uploads', 'menu'))
 MAX_MENU_IMAGE_BYTES = 5 * 1024 * 1024
 ALLOWED_MENU_IMAGE_EXTENSIONS = {'.jpg', '.jpeg', '.png', '.webp'}
+MENU_IMAGE_VARIANT_WIDTHS = {320, 640}
 DEFAULT_MENU_IMAGES = {
     'Bruschetta': 'bruschetta.jpg',
     'Caesar Salad': 'caesar-salad.jpg',
@@ -80,6 +83,7 @@ HOURS = {
 }
 
 EMAIL_RE = re.compile(r'^[^\s@]+@[^\s@]+\.[^\s@]+$')
+HTML_TAG_RE = re.compile(r'<[^>]*>')
 
 
 def get_conn():
@@ -438,6 +442,8 @@ def create_reservation():
 
     if not name:
         return jsonify(error='Name is required.'), 400
+    if HTML_TAG_RE.search(name):
+        return jsonify(error='Names cannot contain HTML markup.'), 400
     if not email or not EMAIL_RE.match(email):
         return jsonify(error='A valid email address is required.'), 400
     try:
@@ -609,7 +615,41 @@ def list_menu_items():
 
 @app.get('/api/menu-images/<path:filename>')
 def menu_image(filename):
-    return send_from_directory(MENU_UPLOAD_DIR, filename)
+    width = request.args.get('width', type=int)
+    if width is None:
+        return send_from_directory(MENU_UPLOAD_DIR, filename)
+    if width not in MENU_IMAGE_VARIANT_WIDTHS:
+        return jsonify(error='Unsupported image width.'), 400
+
+    path = safe_join(MENU_UPLOAD_DIR, filename)
+    if not path or not os.path.isfile(path):
+        return jsonify(error='Image not found.'), 404
+
+    try:
+        with Image.open(path) as source:
+            source.load()
+            if source.width <= width:
+                return send_from_directory(MENU_UPLOAD_DIR, filename, max_age=3600)
+
+            image_format = source.format or 'JPEG'
+            source.thumbnail((width, width), Image.Resampling.LANCZOS)
+            image = source
+            if image_format == 'JPEG' and source.mode not in ('RGB', 'L'):
+                image = source.convert('RGB')
+
+            image_data = BytesIO()
+            save_options = {'format': image_format}
+            if image_format in ('JPEG', 'WEBP'):
+                save_options.update(quality=82, optimize=True)
+            image.save(image_data, **save_options)
+            image_data.seek(0)
+            return send_file(
+                image_data,
+                mimetype=Image.MIME.get(image_format, 'application/octet-stream'),
+                max_age=3600,
+            )
+    except (OSError, ValueError):
+        return jsonify(error='Unable to process image.'), 400
 
 
 @app.get('/api/admin/menu-items')
@@ -745,8 +785,6 @@ def admin_remove_newsletter_subscriber():
     email = (data.get('email') or '').strip().lower()
     if not email or not EMAIL_RE.match(email):
         return jsonify(error='A valid email address is required.'), 400
-    if not 7 <= len(phone_digits) <= 15:
-        return jsonify(error='A valid phone number is required.'), 400
 
     try:
         with get_conn() as conn:

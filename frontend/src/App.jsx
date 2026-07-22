@@ -8,6 +8,7 @@ import Reservations from './pages/Reservations'
 import AboutUs from './pages/AboutUs'
 import Gallery from './pages/Gallery'
 import Admin from './pages/Admin'
+import NotFound from './pages/NotFound'
 
 export default function App() {
   const location = useLocation()
@@ -38,6 +39,7 @@ export default function App() {
           <Route path="/about" element={<AboutUs />} />
           <Route path="/gallery" element={<Gallery />} />
           <Route path="/admin" element={<Admin />} />
+          <Route path="*" element={<NotFound />} />
         </Routes>
       </main>
       <Footer />

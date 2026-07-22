@@ -1,16 +1,27 @@
 import { useEffect, useState } from 'react'
 import './Menu.css'
 import bruschettaImage from '../assets/menu/bruschetta.jpg'
+import bruschettaImage320 from '../assets/menu/bruschetta-320.jpg'
 import caesarSaladImage from '../assets/menu/caesar-salad.jpg'
+import caesarSaladImage320 from '../assets/menu/caesar-salad-320.jpg'
 import grilledSalmonImage from '../assets/menu/grilled-salmon.jpg'
+import grilledSalmonImage320 from '../assets/menu/grilled-salmon-320.jpg'
 import ribeyeSteakImage from '../assets/menu/ribeye-steak.jpg'
+import ribeyeSteakImage320 from '../assets/menu/ribeye-steak-320.jpg'
 import vegetableRisottoImage from '../assets/menu/vegetable-risotto.jpg'
+import vegetableRisottoImage320 from '../assets/menu/vegetable-risotto-320.jpg'
 import tiramisuImage from '../assets/menu/tiramisu.jpg'
+import tiramisuImage320 from '../assets/menu/tiramisu-320.jpg'
 import cheesecakeImage from '../assets/menu/cheesecake.jpg'
+import cheesecakeImage320 from '../assets/menu/cheesecake-320.jpg'
 import redWineImage from '../assets/menu/red-wine.jpg'
+import redWineImage320 from '../assets/menu/red-wine-320.jpg'
 import whiteWineImage from '../assets/menu/white-wine.jpg'
+import whiteWineImage320 from '../assets/menu/white-wine-320.jpg'
 import craftBeerImage from '../assets/menu/craft-beer.jpg'
+import craftBeerImage320 from '../assets/menu/craft-beer-320.jpg'
 import espressoImage from '../assets/menu/espresso.jpg'
+import espressoImage320 from '../assets/menu/espresso-320.jpg'
 
 const FALLBACK_MENU = [
   {
@@ -50,6 +61,24 @@ const FALLBACK_IMAGES = Object.fromEntries(
   FALLBACK_MENU.flatMap(({ items }) => items.map(item => [item.name, item.image]))
 )
 
+const FALLBACK_THUMBNAILS = {
+  Bruschetta: bruschettaImage320,
+  'Caesar Salad': caesarSaladImage320,
+  'Grilled Salmon': grilledSalmonImage320,
+  'Ribeye Steak': ribeyeSteakImage320,
+  'Vegetable Risotto': vegetableRisottoImage320,
+  Tiramisu: tiramisuImage320,
+  Cheesecake: cheesecakeImage320,
+  'Red Wine (Glass)': redWineImage320,
+  'White Wine (Glass)': whiteWineImage320,
+  'Craft Beer': craftBeerImage320,
+  Espresso: espressoImage320,
+}
+
+function apiImageSrcSet(src) {
+  return `${src}?width=320 320w, ${src}?width=640 640w, ${src} 800w`
+}
+
 function formatMenuPrice(price) {
   return Number(price).toFixed(2).replace(/\.?0+$/, '')
 }
@@ -59,7 +88,11 @@ function groupMenuItems(items) {
   const grouped = items.reduce((groups, item) => {
     const category = item.category || 'Menu'
     if (!groups[category]) groups[category] = []
-    groups[category].push({ ...item, image: item.image_url || FALLBACK_IMAGES[item.name] })
+    const image = item.image_url || FALLBACK_IMAGES[item.name]
+    const imageSrcSet = item.image_url?.startsWith('/api/menu-images/')
+      ? apiImageSrcSet(item.image_url)
+      : FALLBACK_THUMBNAILS[item.name] && `${FALLBACK_THUMBNAILS[item.name]} 320w, ${FALLBACK_IMAGES[item.name]} 800w`
+    groups[category].push({ ...item, image, imageSrcSet })
     return groups
   }, {})
   return Object.entries(grouped)
@@ -97,7 +130,14 @@ export default function Menu() {
               {items.map(item => (
                 <div key={item.name} className="menu-item">
                   {item.image
-                    ? <img className="menu-item-image" src={item.image} alt={item.name} loading="lazy" />
+                    ? <img
+                      className="menu-item-image"
+                      src={item.image}
+                      srcSet={item.imageSrcSet || (FALLBACK_THUMBNAILS[item.name] && `${FALLBACK_THUMBNAILS[item.name]} 320w, ${FALLBACK_IMAGES[item.name]} 800w`)}
+                      sizes="(max-width: 600px) 88px, 144px"
+                      alt={item.name}
+                      loading="lazy"
+                    />
                     : <div className="menu-item-image menu-item-image--empty" aria-label={`No image for ${item.name}`}>No image</div>}
                   <div className="menu-item-info">
                     <h3>{item.name}</h3>

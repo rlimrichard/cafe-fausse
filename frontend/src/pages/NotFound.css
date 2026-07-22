@@ -1,0 +1,13 @@
+.not-found {
+  min-height: 55vh;
+  display: grid;
+  place-items: center;
+  text-align: center;
+  background: var(--cream);
+}
+
+.not-found__content > p:not(.section-subtitle) {
+  max-width: 32rem;
+  margin: 1.25rem auto 2rem;
+  color: var(--text-muted);
+}

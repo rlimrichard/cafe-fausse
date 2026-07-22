@@ -137,8 +137,11 @@ sudo systemctl status cafe_fausse
 
 ## 6. Configure Nginx
 
-Create `/etc/nginx/conf.d/cafe_fausse.conf` and replace `example.com` with the
-site's domain:
+The versioned Nginx configuration is at
+`deployment/nginx/cafe_fausse.conf`. Copy it to `/etc/nginx/conf.d/cafe_fausse.conf`
+and replace `example.com` with the site's domain. It enables gzip compression,
+long-lived immutable caching for Vite's hashed static assets, and no-cache
+responses for the HTML shell:
 
 ```nginx
 server {
@@ -148,12 +151,31 @@ server {
     root /opt/cafe_fausse/frontend/dist;
     index index.html;
 
-    location /api/ {
+    gzip on;
+    gzip_vary on;
+    gzip_proxied any;
+    gzip_comp_level 5;
+    gzip_min_length 256;
+    gzip_types text/plain text/css text/xml text/javascript application/javascript application/json application/xml application/rss+xml image/svg+xml;
+
+    location ^~ /api/ {
         proxy_pass http://127.0.0.1:5001;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    location ~* \.(?:css|js|mjs|woff2?|ttf|otf|svg|png|jpe?g|gif|webp|avif|ico)$ {
+        try_files $uri =404;
+        expires 1y;
+        add_header Cache-Control "public, max-age=31536000, immutable";
+        access_log off;
+    }
+
+    location = /index.html {
+        add_header Cache-Control "no-cache";
+        try_files $uri =404;
     }
 
     # React client-side routing

@@ -1,9 +1,13 @@
 import { useState } from 'react'
 import './Gallery.css'
 import cafeInteriorImage from '../../../MSEE_Web_Application_and_Interface_Design_Cafe_Fausse_Images/gallery-cafe-interior.webp'
+import cafeInteriorImage640 from '../../../MSEE_Web_Application_and_Interface_Design_Cafe_Fausse_Images/gallery-cafe-interior-640.webp'
 import ribeyeSteakImage from '../../../MSEE_Web_Application_and_Interface_Design_Cafe_Fausse_Images/gallery-ribeye-steak.webp'
+import ribeyeSteakImage640 from '../../../MSEE_Web_Application_and_Interface_Design_Cafe_Fausse_Images/gallery-ribeye-steak-640.webp'
 import specialEventImage from '../../../MSEE_Web_Application_and_Interface_Design_Cafe_Fausse_Images/gallery-special-event.webp'
+import specialEventImage640 from '../../../MSEE_Web_Application_and_Interface_Design_Cafe_Fausse_Images/gallery-special-event-640.webp'
 import diningRoomImage from '../../../MSEE_Web_Application_and_Interface_Design_Cafe_Fausse_Images/home-cafe-fausse.webp'
+import diningRoomImage640 from '../../../MSEE_Web_Application_and_Interface_Design_Cafe_Fausse_Images/home-cafe-fausse-640.webp'
 
 const IMAGES = [
   { id: 1, src: cafeInteriorImage, alt: 'Café Fausse restaurant interior', category: 'Interior' },
@@ -15,6 +19,19 @@ const IMAGES = [
   { id: 8, src: 'https://images.unsplash.com/photo-1490645935967-10de6ba17061?w=800&q=80', alt: 'Bruschetta starter', category: 'Dishes' },
   { id: 7, src: 'https://images.unsplash.com/photo-1424847651672-bf20a4b0982b?w=800&q=80', alt: 'Kitchen behind the scenes', category: 'Behind the Scenes' },
 ]
+
+const LOCAL_SRC_SETS = {
+  1: `${cafeInteriorImage640} 640w, ${cafeInteriorImage} 1792w`,
+  2: `${diningRoomImage640} 640w, ${diningRoomImage} 1792w`,
+  4: `${ribeyeSteakImage640} 640w, ${ribeyeSteakImage} 1024w`,
+  6: `${specialEventImage640} 640w, ${specialEventImage} 1024w`,
+}
+
+function gallerySrcSet(image) {
+  if (LOCAL_SRC_SETS[image.id]) return LOCAL_SRC_SETS[image.id]
+  if (!image.src.includes('images.unsplash.com')) return undefined
+  return `${image.src.replace('w=800', 'w=480').replace('q=80', 'q=75')} 480w, ${image.src} 800w`
+}
 
 const AWARDS = [
   { year: '2022', title: 'Culinary Excellence Award' },
@@ -44,7 +61,13 @@ export default function Gallery() {
         <div className="gallery-grid">
           {IMAGES.map(img => (
             <button key={img.id} className="gallery-item" onClick={() => setLightbox(img)}>
-              <img src={img.src} alt={img.alt} loading="lazy" />
+              <img
+                src={img.src}
+                srcSet={gallerySrcSet(img)}
+                sizes="(max-width: 900px) calc((100vw - 3.75rem) / 2), 260px"
+                alt={img.alt}
+                loading="lazy"
+              />
               <span className="gallery-caption">{img.category}</span>
             </button>
           ))}

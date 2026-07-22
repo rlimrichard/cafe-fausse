@@ -34,19 +34,32 @@ export default function Reservations() {
   const [lookupResults, setLookupResults] = useState([])
 
   function set(field) {
-    return e => setForm(f => ({ ...f, [field]: e.target.value }))
+    return e => {
+      const value = e.target.value
+      const next = { ...form, [field]: value }
+      setForm(next)
+      setErrors(currentErrors => {
+        if (!Object.keys(currentErrors).length) return currentErrors
+        const nextErrors = validate(next)
+        return Object.fromEntries(
+          Object.keys(currentErrors)
+            .filter(key => nextErrors[key])
+            .map(key => [key, nextErrors[key]])
+        )
+      })
+    }
   }
 
   function setLookup(field) {
     return e => setLookupForm(current => ({ ...current, [field]: e.target.value }))
   }
 
-  function validate() {
+  function validate(values = form) {
     const errs = {}
-    if (!form.date) errs.date = 'Please select a date.'
-    if (!form.time) errs.time = 'Please select a time.'
-    if (form.date && form.time) {
-      const dt = new Date(`${form.date}T${form.time}:00`)
+    if (!values.date) errs.date = 'Please select a date.'
+    if (!values.time) errs.time = 'Please select a time.'
+    if (values.date && values.time) {
+      const dt = new Date(`${values.date}T${values.time}:00`)
       if (dt <= new Date()) {
         errs.time = 'Please select a future date and time.'
       } else {
@@ -59,12 +72,12 @@ export default function Reservations() {
         }
       }
     }
-    if (!form.name.trim()) errs.name = 'Name is required.'
-    if (!form.email.trim()) errs.email = 'Email is required.'
-    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) errs.email = 'Please enter a valid email.'
-    if (!form.phone.trim()) errs.phone = 'Phone number is required.'
-    else if (form.phone.replace(/\D/g, '').length < 7) errs.phone = 'Please enter a valid phone number.'
-    if (!form.guests || form.guests < 1 || form.guests > 30) errs.guests = 'Guests must be between 1 and 30.'
+    if (!values.name.trim()) errs.name = 'Name is required.'
+    if (!values.email.trim()) errs.email = 'Email is required.'
+    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(values.email)) errs.email = 'Please enter a valid email.'
+    if (!values.phone.trim()) errs.phone = 'Phone number is required.'
+    else if (values.phone.replace(/\D/g, '').length < 7) errs.phone = 'Please enter a valid phone number.'
+    if (!values.guests || values.guests < 1 || values.guests > 30) errs.guests = 'Guests must be between 1 and 30.'
     return errs
   }
 

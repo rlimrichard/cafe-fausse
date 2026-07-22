@@ -596,7 +596,9 @@ export default function Admin() {
 }
 
 function ReservationCalendar({ reservations }) {
-  const accepted = reservations.filter(reservation => reservation.status === 'accepted')
+  const scheduled = reservations.filter(reservation => reservation.status === 'accepted' || reservation.status === 'pending')
+  const pendingCount = scheduled.filter(reservation => reservation.status === 'pending').length
+  const acceptedCount = scheduled.length - pendingCount
   const [month, setMonth] = useState(() => new Date(new Date().getFullYear(), new Date().getMonth(), 1))
   const [selectedDay, setSelectedDay] = useState(() => localDateKey(new Date()))
   const firstWeekday = month.getDay()
@@ -605,7 +607,7 @@ function ReservationCalendar({ reservations }) {
     if (index < firstWeekday) return null
     return new Date(month.getFullYear(), month.getMonth(), index - firstWeekday + 1)
   })
-  const reservationsByDay = accepted.reduce((groups, reservation) => {
+  const reservationsByDay = scheduled.reduce((groups, reservation) => {
     const key = localDateKey(new Date(reservation.time_slot))
     groups[key] = [...(groups[key] || []), reservation]
     return groups
@@ -626,8 +628,8 @@ function ReservationCalendar({ reservations }) {
     <section className="calendar-panel">
       <div className="calendar-panel-header">
         <div>
-          <h2>Accepted Reservations</h2>
-          <p>{accepted.length} confirmed reservation{accepted.length === 1 ? '' : 's'} shown by service time.</p>
+          <h2>Reservations Calendar</h2>
+          <p>{pendingCount} pending · {acceptedCount} confirmed reservation{scheduled.length === 1 ? '' : 's'} shown by service time.</p>
         </div>
         <div className="calendar-controls">
           <button className="log-btn" onClick={() => changeMonth(-1)} aria-label="Previous month">‹</button>
@@ -662,9 +664,10 @@ function ReservationCalendar({ reservations }) {
               <div className="hour-slot" key={hour}>
                 <time>{formatScheduleHour(hour)}</time>
                 <div>
-                  {slotReservations.length === 0 ? <span className="hour-empty">No accepted reservations</span> : slotReservations.map(reservation => (
-                    <article key={reservation.id} className="schedule-reservation">
+                  {slotReservations.length === 0 ? <span className="hour-empty">No pending or confirmed reservations</span> : slotReservations.map(reservation => (
+                    <article key={reservation.id} className={`schedule-reservation schedule-reservation--${reservation.status}`}>
                       <strong>{reservation.name}</strong>
+                      <small>{STATUS_LABELS[reservation.status]}</small>
                       <span>Table {reservation.table_number} · {reservation.guests} guest{reservation.guests === 1 ? '' : 's'} · {formatTimeOnly(reservation.time_slot)}</span>
                     </article>
                   ))}

@@ -308,7 +308,11 @@
 .schedule-reservation { display: grid; gap: 0.2rem; margin-bottom: 0.6rem; padding: 0.55rem 0.65rem; border-left: 3px solid #2a7a4b; background: #18231c; }
 .schedule-reservation:last-child { margin-bottom: 0; }
 .schedule-reservation strong { color: #eee; font-size: 0.85rem; }
+.schedule-reservation small { color: #76c995; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; }
 .schedule-reservation span { color: #9aa99f; font-size: 0.75rem; }
+.schedule-reservation--pending { border-left-color: #b8972a; background: #2a2416; }
+.schedule-reservation--pending small { color: #e6c768; }
+.schedule-reservation--pending span { color: #d6c38e; }
 
 .menu-manager-heading {
   display: flex;

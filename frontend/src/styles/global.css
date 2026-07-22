@@ -4,8 +4,21 @@
   padding: 0;
 }
 
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
 :root {
   --gold: #b8972a;
+  --focus-ring: #005fcc;
   --dark: #1a1a1a;
   --charcoal: #2d2d2d;
   --cream: #f5f0e8;
@@ -36,6 +49,13 @@ h1, h2, h3, h4 {
 a {
   color: inherit;
   text-decoration: none;
+}
+
+/* Keep a clear focus cue for keyboard users, including components that reset outlines. */
+:focus-visible {
+  outline: 3px solid #fff !important;
+  outline-offset: 2px;
+  box-shadow: 0 0 0 5px var(--focus-ring);
 }
 
 img {
