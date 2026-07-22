@@ -33,6 +33,10 @@ frontend/build/
 *.log
 logs/
 
+# Runtime-generated assets and deployment rollback files
+backend/uploads/
+.deploy-backups/
+
 # PDFs and zips (large binary assets)
 *.pdf
 *.zip
