@@ -1,8 +1,10 @@
 import { useState } from 'react'
 import './Reservations.css'
 
+// Operating hours keyed by JS getDay() value: 0 = Sunday … 6 = Saturday.
+// Close hour is exclusive (e.g. 23 means last valid slot is 22:xx).
 const HOURS = {
-  0: { open: 17, close: 21 },  // Sunday
+  0: { open: 17, close: 21 },  // Sunday closes at 9 PM
   1: { open: 17, close: 23 },  // Monday
   2: { open: 17, close: 23 },
   3: { open: 17, close: 23 },
@@ -22,7 +24,7 @@ function buildTimeOptions() {
 const TIME_OPTIONS = buildTimeOptions()
 
 const INITIAL = { date: '', time: '', guests: 2, name: '', email: '', phone: '' }
-const LOOKUP_INITIAL = { email: '', phone: '' }
+const LOOKUP_INITIAL = { email: '' }
 
 export default function Reservations() {
   const [form, setForm] = useState(INITIAL)
@@ -54,6 +56,7 @@ export default function Reservations() {
         const hour = dt.getHours()
         const minutes = dt.getMinutes()
         const { open, close } = HOURS[day]
+        // Reject the last half-hour on Saturday (22:30 would push past 11 PM close).
         if (hour < open || hour >= close || (hour === close - 1 && minutes > 0 && close === 23)) {
           errs.time = `Sorry, we are not open at that time. Hours: Mon–Sat 5–11 PM, Sun 5–9 PM.`
         }
@@ -62,8 +65,7 @@ export default function Reservations() {
     if (!form.name.trim()) errs.name = 'Name is required.'
     if (!form.email.trim()) errs.email = 'Email is required.'
     else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) errs.email = 'Please enter a valid email.'
-    if (!form.phone.trim()) errs.phone = 'Phone number is required.'
-    else if (form.phone.replace(/\D/g, '').length < 7) errs.phone = 'Please enter a valid phone number.'
+    if (form.phone.trim() && form.phone.replace(/\D/g, '').length < 7) errs.phone = 'Please enter a valid phone number.'
     if (!form.guests || form.guests < 1 || form.guests > 30) errs.guests = 'Guests must be between 1 and 30.'
     return errs
   }
@@ -171,8 +173,8 @@ export default function Reservations() {
             </div>
 
             <div className="form-group">
-              <label htmlFor="phone">Phone Number</label>
-              <input id="phone" required type="tel" placeholder="(202) 555-0000" value={form.phone} onChange={set('phone')} />
+              <label htmlFor="phone">Phone Number <span className="field-optional">(optional)</span></label>
+              <input id="phone" type="tel" placeholder="(202) 555-0000" value={form.phone} onChange={set('phone')} />
               {errors.phone && <span className="field-error">{errors.phone}</span>}
             </div>
 
@@ -221,14 +223,11 @@ export default function Reservations() {
           <div>
             <p className="section-subtitle">Already Requested?</p>
             <h2 id="reservation-lookup-title">Look Up a Reservation Request</h2>
-            <p>Enter the email address and phone number used for your request to view its current status.</p>
+            <p>Enter the email address used for your request to view its current status.</p>
           </div>
           <form className="lookup-form" onSubmit={handleLookup}>
             <label>Email Address
               <input required type="email" placeholder="jane@example.com" value={lookupForm.email} onChange={setLookup('email')} />
-            </label>
-            <label>Phone Number
-              <input required type="tel" placeholder="(202) 555-0000" value={lookupForm.phone} onChange={setLookup('phone')} />
             </label>
             <button className="btn btn-primary" type="submit" disabled={lookupStatus === 'loading'}>
               {lookupStatus === 'loading' ? 'Looking up...' : 'Look Up Request'}

@@ -85,6 +85,37 @@
   line-height: 1;
 }
 
+.lightbox-prev,
+.lightbox-next {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(255,255,255,0.12);
+  border: none;
+  color: #fff;
+  font-size: 3rem;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0.5rem 0.9rem;
+  border-radius: 4px;
+  transition: background 0.2s;
+  user-select: none;
+}
+
+.lightbox-prev { left: 1.5rem; }
+.lightbox-next { right: 1.5rem; }
+
+.lightbox-prev:hover,
+.lightbox-next:hover {
+  background: rgba(255,255,255,0.28);
+}
+
+.lightbox-counter {
+  color: #999;
+  font-size: 0.8rem;
+  margin-left: 0.75rem;
+}
+
 .awards-section {
   padding-top: 4rem;
 }
