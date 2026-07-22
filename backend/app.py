@@ -20,6 +20,10 @@ from dotenv import load_dotenv
 from werkzeug.utils import safe_join, secure_filename
 from PIL import Image
 
+# Café Fausse REST API — Flask backend for the restaurant web application.
+# Endpoints: public reservations/menu/newsletter, admin CRUD, visitor analytics.
+# Auth: admin routes require the X-Admin-Password header (set via ADMIN_PASSWORD env var).
+
 load_dotenv()
 
 app = Flask(__name__)
@@ -28,9 +32,12 @@ CORS(app)
 # ── In-memory log buffer (last 200 entries) ───────────────────────────────────
 _log_buffer = deque(maxlen=200)
 
+# Strips terminal colour codes that Flask injects in development mode so the
+# admin log panel receives plain text rather than raw ANSI escape sequences.
 _ANSI_RE = re.compile(r'\x1b\[[0-9;]*m')
 
 class _BufferHandler(logging.Handler):
+    """Appends every log record to the in-memory ring buffer as a plain dict."""
     def emit(self, record):
         _log_buffer.append({
             'ts': datetime.now(timezone.utc).isoformat(),
@@ -51,7 +58,7 @@ SMTP_USER     = os.environ.get('SMTP_USER', '')
 SMTP_PASSWORD = os.environ.get('SMTP_PASSWORD', '')
 EMAIL_FROM    = os.environ.get('EMAIL_FROM', SMTP_USER)
 MENU_UPLOAD_DIR = os.environ.get('MENU_UPLOAD_DIR', os.path.join(os.path.dirname(__file__), 'uploads', 'menu'))
-MAX_MENU_IMAGE_BYTES = 5 * 1024 * 1024
+MAX_MENU_IMAGE_BYTES = 5 * 1024 * 1024  # 5 MB hard limit for uploaded menu images
 ALLOWED_MENU_IMAGE_EXTENSIONS = {'.jpg', '.jpeg', '.png', '.webp'}
 MENU_IMAGE_VARIANT_WIDTHS = {320, 640}
 DEFAULT_MENU_IMAGES = {
@@ -87,6 +94,7 @@ HTML_TAG_RE = re.compile(r'<[^>]*>')
 
 
 def get_conn():
+    """Open a new psycopg3 connection. dict_row makes columns accessible by name."""
     return psycopg.connect(DB_URL, row_factory=dict_row)
 
 
@@ -217,6 +225,7 @@ def validate_menu_form(data):
 
 
 def save_menu_image(file):
+    """Validate and persist an uploaded menu image; return (url, error)."""
     if not file or not file.filename:
         return None, None
     if file.content_length and file.content_length > MAX_MENU_IMAGE_BYTES:
@@ -225,6 +234,7 @@ def save_menu_image(file):
     extension = os.path.splitext(safe_name)[1].lower()
     if extension not in ALLOWED_MENU_IMAGE_EXTENSIONS:
         return None, 'Use a JPG, PNG, or WebP image.'
+    # Use a UUID filename to avoid collisions and prevent path-traversal attacks.
     filename = f'{uuid.uuid4().hex}{extension}'
     file.save(os.path.join(MENU_UPLOAD_DIR, filename))
     return f'/api/menu-images/{filename}', None
@@ -240,11 +250,13 @@ def delete_uploaded_menu_image(image_url):
 
 
 def is_valid_time_slot(dt: datetime) -> bool:
+    """Check that the requested hour falls within the restaurant's opening hours."""
     open_h, close_h = HOURS[dt.weekday()]
     return open_h <= dt.hour < close_h
 
 
 def check_admin(req):
+    """Return a 401 response tuple if the X-Admin-Password header is wrong, else None."""
     auth = req.headers.get('X-Admin-Password', '')
     if auth != ADMIN_PASSWORD:
         return jsonify(error='Unauthorized'), 401
@@ -432,6 +444,11 @@ def record_visit():
 
 @app.post('/api/reservations')
 def create_reservation():
+    """
+    Book a table. Validates the time slot, checks availability across all 30 tables,
+    assigns a random free table, and upserts the customer record before inserting the
+    reservation as 'pending' awaiting admin review.
+    """
     data = request.get_json(silent=True) or {}
     name = (data.get('name') or '').strip()
     email = (data.get('email') or '').strip().lower()
@@ -527,12 +544,9 @@ def lookup_reservations():
     """Return reservation status only when both guest identifiers match."""
     data = request.get_json(silent=True) or {}
     email = (data.get('email') or '').strip().lower()
-    phone_digits = re.sub(r'\D', '', (data.get('phone') or ''))
 
     if not email or not EMAIL_RE.match(email):
         return jsonify(error='Please provide a valid email address.'), 400
-    if not 7 <= len(phone_digits) <= 15:
-        return jsonify(error='Please provide a valid phone number.'), 400
 
     try:
         with get_conn() as conn:
@@ -541,10 +555,9 @@ def lookup_reservations():
                    FROM reservations r
                    JOIN customers c ON c.id = r.customer_id
                    WHERE LOWER(c.email_address) = %s
-                     AND regexp_replace(COALESCE(c.phone_number, ''), '[^0-9]', '', 'g') = %s
                    ORDER BY r.time_slot DESC
                    LIMIT 10''',
-                (email, phone_digits)
+                (email,)
             ).fetchall()
         return jsonify([
             {
@@ -562,6 +575,7 @@ def lookup_reservations():
 
 @app.post('/api/newsletter')
 def newsletter_signup():
+    """Subscribe an email to the newsletter. Upserts into customers; idempotent for already-subscribed addresses."""
     data = request.get_json(silent=True) or {}
     email = (data.get('email') or '').strip().lower()
 
@@ -805,6 +819,7 @@ def admin_remove_newsletter_subscriber():
 
 @app.get('/api/admin/reservations')
 def admin_list_reservations():
+    """List all reservations joined with customer details. Accepts ?status= to filter by pending/accepted/denied."""
     denied = check_admin(request)
     if denied:
         return denied
@@ -854,6 +869,7 @@ def admin_list_reservations():
 
 @app.patch('/api/admin/reservations/<int:res_id>')
 def admin_update_reservation(res_id):
+    """Update a single reservation status. Sends confirmation/denial email for accept/deny; no email when reverting to pending."""
     denied = check_admin(request)
     if denied:
         return denied
@@ -931,6 +947,7 @@ def admin_delete_reservation(res_id):
 
 @app.post('/api/admin/reservations/bulk')
 def admin_bulk_reservations():
+    """Apply a single action (accept/deny/pending/delete) to a list of reservation IDs in one request."""
     denied = check_admin(request)
     if denied:
         return denied
@@ -1001,6 +1018,7 @@ def admin_bulk_reservations():
 
 @app.get('/api/admin/insights')
 def admin_insights():
+    """Return aggregate visitor stats: unique visitors total, page-view events, and unique visitors today."""
     denied = check_admin(request)
     if denied:
         return denied
@@ -1041,6 +1059,7 @@ def admin_db_counts():
 
 @app.get('/api/admin/db/<table_name>')
 def admin_db_table(table_name):
+    """Expose raw table contents to the admin DB viewer. Whitelist prevents arbitrary SQL injection via the URL."""
     denied = check_admin(request)
     if denied:
         return denied

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import './Gallery.css'
 import cafeInteriorImage from '../../../MSEE_Web_Application_and_Interface_Design_Cafe_Fausse_Images/gallery-cafe-interior.webp'
 import cafeInteriorImage640 from '../../../MSEE_Web_Application_and_Interface_Design_Cafe_Fausse_Images/gallery-cafe-interior-640.webp'
@@ -45,11 +45,39 @@ const REVIEWS = [
 ]
 
 export default function Gallery() {
-  const [lightbox, setLightbox] = useState(null)
+  // null = lightbox closed; a number = index of the currently displayed image.
+  const [lightboxIndex, setLightboxIndex] = useState(null)
 
-  function closeLightbox(e) {
-    if (e.target === e.currentTarget) setLightbox(null)
+  // Wrap-around navigation: going past the last image cycles back to the first.
+  const prev = useCallback(() => {
+    setLightboxIndex(i => (i - 1 + IMAGES.length) % IMAGES.length)
+  }, [])
+
+  const next = useCallback(() => {
+    setLightboxIndex(i => (i + 1) % IMAGES.length)
+  }, [])
+
+  const close = useCallback(() => setLightboxIndex(null), [])
+
+  // Keyboard navigation — listener is added only while the lightbox is open,
+  // and cleaned up when it closes to avoid stale closures.
+  useEffect(() => {
+    if (lightboxIndex === null) return
+    function onKey(e) {
+      if (e.key === 'ArrowLeft') prev()
+      else if (e.key === 'ArrowRight') next()
+      else if (e.key === 'Escape') close()
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [lightboxIndex, prev, next, close])
+
+  // Clicking the dark overlay (not the image itself) closes the lightbox.
+  function onOverlayClick(e) {
+    if (e.target === e.currentTarget) close()
   }
+
+  const lightbox = lightboxIndex !== null ? IMAGES[lightboxIndex] : null
 
   return (
     <div className="gallery-page section">
@@ -59,8 +87,8 @@ export default function Gallery() {
         <div className="divider" />
 
         <div className="gallery-grid">
-          {IMAGES.map(img => (
-            <button key={img.id} className="gallery-item" onClick={() => setLightbox(img)}>
+          {IMAGES.map((img, idx) => (
+            <button key={img.id} className="gallery-item" onClick={() => setLightboxIndex(idx)}>
               <img
                 src={img.src}
                 srcSet={gallerySrcSet(img)}
@@ -74,10 +102,12 @@ export default function Gallery() {
         </div>
 
         {lightbox && (
-          <div className="lightbox" onClick={closeLightbox} role="dialog" aria-modal="true">
-            <button className="lightbox-close" onClick={() => setLightbox(null)} aria-label="Close">&#x2715;</button>
+          <div className="lightbox" onClick={onOverlayClick} role="dialog" aria-modal="true" aria-label={lightbox.alt}>
+            <button className="lightbox-close" onClick={close} aria-label="Close">&#x2715;</button>
+            <button className="lightbox-prev" onClick={prev} aria-label="Previous image">&#8249;</button>
             <img src={lightbox.src.replace('w=800', 'w=1200')} alt={lightbox.alt} />
-            <p className="lightbox-caption">{lightbox.alt}</p>
+            <button className="lightbox-next" onClick={next} aria-label="Next image">&#8250;</button>
+            <p className="lightbox-caption">{lightbox.alt} <span className="lightbox-counter">{lightboxIndex + 1} / {IMAGES.length}</span></p>
           </div>
         )}
 
