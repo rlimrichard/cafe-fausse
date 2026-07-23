@@ -93,6 +93,74 @@ remained entirely the developer's responsibility.
 
 ---
 
+### Claude (Cowork mode, incl. Claude in Chrome) — used for independent QA - Diva Nagaraju
+
+**Model:** Claude Sonnet 5, accessed via Cowork with the Claude in Chrome
+browser extension connected.
+
+Claude was brought in after both build phases were complete, as an independent
+QA pass — it had no role in writing the application code and worked from the
+live deployed site plus a read-only review of the GitHub repository.
+
+#### What it was used for
+
+- **Black-box functional testing** of the live site (http://ecbproj1.elcaro.io/)
+  against the SRS/project brief — navigation, reservation booking and capacity
+  logic, newsletter sign-up, content completeness — driven through an actual
+  Chromium browser via Claude in Chrome, not just static code reading.
+- **UI, UX, mobile-responsive, accessibility (WCAG 2.1 AA), and performance
+  audits**, each delivered as a standalone report.
+- **Defect reporting** with severity, steps to reproduce, expected/actual
+  result, and suggested fix, plus a Requirement Traceability Matrix mapping
+  every SRS requirement to test cases and defects.
+- **Source-code-assisted root-cause analysis**: once given read access to the
+  GitHub repo, it cross-referenced live behavior against `app.py` and the React
+  components to explain *why* a bug happened, not just *that* it happened —
+  e.g., tracing a menu-image loading delay to `loading="lazy"` combined with
+  uncompressed image assets, and finding a backend crash
+  (`NameError: phone_digits`) in an admin endpoint that black-box testing alone
+  could never have surfaced.
+- **A full retest pass** after fixes shipped, re-verifying every open defect
+  against the current deployment and updating all QA documents to reflect
+  current status (fixed / still open / needs recheck) rather than regenerating
+  a static report.
+- **Security observation**: while reading `app.py`, it identified that the
+  admin panel was still protected only by its framework-default password. It
+  performed one read-only confirmation against the live site, reported the
+  finding directly, and took no further admin action — leaving remediation and
+  credential rotation to the developer.
+
+#### What worked well
+
+- **Real browser testing closes a gap noted in the Claude Code section above.**
+  Because Claude in Chrome renders and interacts with the actual page (clicks,
+  keyboard nav, form submission, screenshots), it could independently verify
+  UI/UX behavior that a code-only assistant can only infer — directly
+  addressing the earlier note that "testing the UI... remained entirely the
+  developer's responsibility."
+- **Combining live testing with source access** turned "it's broken" into "here's
+  the exact line and why," and let it distinguish a cosmetic issue from a real
+  functional defect (e.g., recognizing the missing "$" on menu prices was
+  intentional once the project changelog confirmed it, rather than flagging it
+  as a bug).
+- **Structured, traceable deliverables** — a Bug List and RTM spreadsheet plus
+  narrative reports — made it easy to see status at a glance and re-run the
+  same tracking after a retest.
+
+#### What didn't work as well
+
+- **No true cross-browser coverage.** Testing ran through a single
+  Chromium-based browser; Firefox, Safari, and Edge still need manual
+  verification.
+- **No screen-reader testing.** Accessibility checks were programmatic
+  (contrast ratios, ARIA/label presence, focus-outline computed styles), not a
+  real NVDA/VoiceOver pass.
+- **Could not perform or verify destructive/administrative actions.** Database
+  cleanup of test data created during QA, admin password rotation, and true
+  concurrent (parallel, not sequential) load/race-condition testing all
+  require direct server or admin access the assistant intentionally did not
+  use once it identified them as sensitive.
+
 ## Security and credential practices
 
 No private SSH keys, database passwords, admin passwords, or SMTP credentials
